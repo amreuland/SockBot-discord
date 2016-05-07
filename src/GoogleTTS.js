@@ -126,7 +126,7 @@ GoogleTTS.prototype.getFile = function(obj) {
           .on('end', function(){
             console.log('Saving sound file "' + cachePath + '"');
             audio_file.end();
-            resolve(options.cache);
+            resolve(cachePath);
           })
         })
       })

@@ -6,7 +6,7 @@ var sleep = require('sleep');
 var lame = require('lame');
 var fs = require('fs');
 
-var cache_dir = path.normalize(__dirname + '../data/tts/cache');
+var cache_dir = path.normalize('/home/wolf/Projects/Discord/wolfbot/data/tts/cache');
 
 var client = new Discord();
 var GTTS = new GoogleTTS(cache_dir);
@@ -57,7 +57,7 @@ client.Dispatcher.on("MESSAGE_CREATE", e => {
 
     var vchannel =
       guild.voiceChannels
-      .find(channel => channel.name.toLowerCase().indexOf(targetChannel) >= 0);
+      .find(channel => channel.name.indexOf(targetChannel) >= 0);
     if (vchannel) vchannel.join();
   }
 
@@ -84,92 +84,88 @@ client.Dispatcher.on("VOICE_CONNECTED", e => {
 });
 
 client.Dispatcher.on("VOICE_CHANNEL_JOIN", e => {
-  client.Channels
-  .filter(channel => channel.type == "voice" && channel.joined && channel.id == e.channel.id)
-  .foreach(channel => {
-    async.nextTick(function(){
+  if(e.user.id == client.User.id){
+    console.log("Not announcing own actions.");
+    return;
+  }
+  var vchannel = client.Channels
+  .find(channel => channel.type == "voice" && channel.joined && channel.id == e.channelId)
+  if(vchannel){
+    console.log("JOIN");
+    console.log(vchannel);
+    // async.nextTick(function(){
       announceQueue.push({
         user: e.user.username,
-        action: 'joined'
+        action: 'joined',
+        guild: e.guildId,
+        channel: e.channelId,
+        info: vchannel.getVoiceConnectionInfo()
       })
-    })
-  });
+    // })
+  };
 })
 
 client.Dispatcher.on("VOICE_CHANNEL_LEAVE", e => {
-  client.Channels
+  if(e.user.id == client.User.id){
+    console.log("Not announcing own actions.");
+    return;
+  }
+  var vchannel = client.Channels
   .find(channel => channel.type == "voice" && channel.joined && channel.id == e.channelId)
-  .foreach(channel => {
-    async.nextTick(function(){
+  if(vchannel){
+    console.log("LEAVE");
+    console.log(vchannel);
+    // async.nextTick(function(){
       announceQueue.push({
         user: e.user.username,
         action: 'left',
         guild: e.guildId,
         channel: e.channelId,
-        info: channel.getVoiceConnectionInfo();
+        info: vchannel.getVoiceConnectionInfo()
       })
-    })
-  });
+    // })
+  };
 })
 
-async.forever(
-  function(next) {
-    if(announceQueue.length){
-      var eve = announceQueue.shift();
-      if (!client.VoiceConnections.length) {
-        return console.log("Voice not connected");
-      }
-      var info = eve.info;
-
-      GTTS.getFile(eve.user + 'has ' + eve.action + ' the channel')
-      .then(function(aPath){
-
-        var mp3decoder = new lame.Decoder();
-        var file = fs.createReadStream(aPath);
-        file.pipe(mp3decoder);
-
-        mp3decoder.on('format', pcmfmt => {
-          // note: discordie encoder does resampling if rate != 48000
-          var options = {
-            frameDuration: 60,
-            sampleRate: pcmfmt.sampleRate,
-            channels: pcmfmt.channels,
-            float: false
-          };
-
-          var encoderStream = info.voiceConnection.getEncoderStream(options);
-          if (!encoderStream) {
-            return console.log(
-              "Unable to get encoder stream, connection is disposed"
-            );
-          }
-
-          // Stream instance is persistent until voice connection is disposed;
-          // you can register timestamp listener once when connection is initialized
-          // or access timestamp with `encoderStream.timestamp`
-          encoderStream.resetTimestamp();
-          encoderStream.removeAllListeners("timestamp");
-          encoderStream.on("timestamp", time => console.log("Time " + time));
-
-          // only 1 stream at a time can be piped into AudioEncoderStream
-          // previous stream will automatically unpipe
-          mp3decoder.pipe(encoderStream);
-          // must be registered after `pipe()`
-          encoderStream.once("unpipe", () => file.destroy());
-        });
-
-      })
-
-
-      sleep.sleep(0.5);
+function runTickNow() {
+  if(announceQueue.length){
+    var eve = announceQueue.shift();
+    if (!client.VoiceConnections.length) {
+      return console.log("Voice not connected");
     }
-    
-        
-  },
-  function(err) {
+    var info = eve.info;
+    console.log("QUEUE");
+    console.log(eve); 
+    GTTS.getFile(eve.user + ' has ' + eve.action + ' the channel')
+    .then(function(aPath){
 
+      var encoder = info.voiceConnection.createExternalEncoder({
+        type: "ffmpeg",
+        source: aPath,
+        format: "pcm",
+        // outputArgs: ["-af"],
+        debug: true
+      });
+      if (!encoder) return console.log("Voice connection is no longer valid");
+
+      encoder.once("end", () => {
+        console.log("ENDED");
+        setTimeout(runTickNow, 500);
+      });
+
+      var encoderStream = encoder.play();
+      encoderStream.resetTimestamp();
+      encoderStream.removeAllListeners("timestamp");
+      encoderStream.on("timestamp", time => console.log("Time " + time));
+
+    })
+    .catch(function(err){
+      console.error(err);
+    });
+  }else{
+    setImmediate(runTickNow);
   }
-);
+}
 
 client.Dispatcher.onAny((type, e) => {
   var ignore = [
@@ -187,3 +183,5 @@ client.Dispatcher.onAny((type, e) => {
   console.log("\nevent " + type);
   return console.log("args " + JSON.stringify(e));
 });
+
+setTimeout(runTickNow, 100);
