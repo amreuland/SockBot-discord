@@ -1,0 +1,30 @@
+{
+  "name": "wolfbot",
+  "version": "0.0.0",
+  "description": "A bot for our discord server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Austin Reuland",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amreuland/wolfbot-discord.git"
+  },
+  "dependencies": {
+    "MD5": "^1.3.0",
+    "async": "^2.0.0-rc.4",
+    "bluebird": "^3.3.5",
+    "discordie": "^0.6.0",
+    "fs-extra": "^0.30.0",
+    "google-tts-api": "0.0.1",
+    "lame": "^1.2.3",
+    "lodash": "^4.11.2",
+    "request": "^2.72.0",
+    "request-promise": "^3.0.0",
+    "sleep": "^3.0.1",
+    "underscore.string": "^3.3.4"
+  }
+}
