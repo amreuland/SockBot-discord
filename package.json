@@ -1,17 +1,27 @@
 {
-  "name": "wolfbot",
+  "name": "sockbot",
   "version": "0.0.0",
   "description": "A bot for our discord server",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js"
   },
   "author": "Austin Reuland",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amreuland/wolfbot-discord.git"
+    "url": "git+https://github.com/amreuland/SockBot-discord.git"
+  },
+  "bugs": {
+    "url": "https://github.com/amreuland/SockBot-discord/issues"
+  },
+  "contributors": [
+    "Austin Reuland",
+    "Dakota Fannin"
+  ],
+  "engines": {
+    "node": "4.4.3",
+    "npm": "3.8.7"
   },
   "dependencies": {
     "MD5": "^1.3.0",
@@ -25,6 +35,17 @@
     "request": "^2.72.0",
     "request-promise": "^3.0.0",
     "sleep": "^3.0.1",
-    "underscore.string": "^3.3.4"
+    "underscore.string": "^3.3.4",
+    "youtube-node": "^1.3.0"
+  },
+  "keywords": [
+    "Discord",
+    "Bot"
+  ],
+  "babel": {
+    "presets": [
+      "es2015-node4",
+      "stage-1"
+    ]
   }
 }

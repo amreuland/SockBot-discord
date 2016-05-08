@@ -23,7 +23,8 @@ var GoogleTTS = function(options) {
   self.opts = _.extend({
     lang: 'en',
     cache: __dirname + '/cache',
-    format: 'mp3'
+    format: 'mp3',
+    speed: 1
   }, options);
 
   // try {
@@ -58,14 +59,15 @@ GoogleTTS.prototype.getFile = function(obj) {
   var qs = {
     l: opts.lang,
     s: opts.str,
+    q: opts.speed,
     r: opts.str.length,
     x: opts.format
   };
 
   // Get the file signature
   var signature = md5(_.values(_.omit(qs, 'key')).join('-'));
-  var cacheDir = path.join(self.opts.cache, self.name, opts.lang, signature.substr(0,2));
-  var cacheFile = slugify(opts.str) + '-' + signature + '.' + self.opts.format;
+  var cacheDir = path.join(self.opts.cache, self.name, opts.lang, opts.speed.toString(), signature.substr(0,2));
+  var cacheFile = slugify(opts.str) + '_' + signature + '.' + self.opts.format;
   var cachePath = path.join(cacheDir, cacheFile);
 
 
@@ -108,7 +110,7 @@ GoogleTTS.prototype.getFile = function(obj) {
     if(res === true){
       return cachePath;
     }else{
-      return gTTSGen(opts.str, opts.lang, 1)
+      return gTTSGen(opts.str, opts.lang, opts.speed)
       .then(function(url){
         return new Promise(function(resolve, reject){
           var audio_file = fs.createWriteStream(cachePath);
