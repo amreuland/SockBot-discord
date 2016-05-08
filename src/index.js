@@ -284,7 +284,7 @@ client.Dispatcher.on('PRESENCE_UPDATE', e => {
       }
       channelMap[vchannel.id][e.user.id].connected = false;
       channelMap[vchannel.id][e.user.id].time = Math.floor(Date.now() / 1000);
-      var user = e.user.memberOf(e.guildId);
+      var user = e.user.memberOf(e.guild);
       var name;
       if(user){
         name = user.name;
@@ -293,7 +293,7 @@ client.Dispatcher.on('PRESENCE_UPDATE', e => {
       }
       announceQueue.push({
         action: name + ' has gone offline',
-        guild: e.guildId,
+        guild: e.guild.guildId,
         channel: e.channelId,
         info: vchannel.getVoiceConnectionInfo()
       })
@@ -321,7 +321,7 @@ function runTickNow() {
         type: "ffmpeg",
         source: aPath,
         format: "pcm",
-        outputArgs: ["-af", 'volume=volume=0.3'],
+        outputArgs: ["-af", 'volume=volume=0.25'],
 //        debug: true
       });
       if (!encoder) return console.log("Voice connection is no longer valid");
