@@ -12,15 +12,12 @@ var ChatHandler = require('./lib/ChatHandler');
 
 var conf = require('../config');
 
-var timeoutTime = 10;
+var timeoutTime = 10000;
 
 var client = new Discord();
 var GTTS = new GoogleTTS(conf.tts.cache);
 
-var admins = {
-  '144600822737534976': 'noriah',
-  '148647353686032384': 'Dakota'
-}
+var admins = conf.admins;
 
 var channelMap = {};
 
@@ -52,10 +49,13 @@ var chatHandler = new ChatHandler(client);
 
 chatHandler.register();
 
+chatHandler.registerCommand('ping', [], function(handler, obj, author, content, args){
+  obj.channel.sendMessage('pong');
+});
+
 chatHandler.registerCommand('test', ['t'], function(handler, obj, author, content, args){
   obj.channel.sendMessage(args.slice(1).join(' '));
 });
-
 
 chatHandler.registerCommand('vleave', [], function(handler, obj, author, content, args){
   handler.bot.Channels
@@ -64,7 +64,6 @@ chatHandler.registerCommand('vleave', [], function(handler, obj, author, content
 });
 
 chatHandler.registerCommand('vsay', ['s', 'say', 'vs'], function(handler, obj, author, content, args){
-
   var vchannel = handler.bot.Channels
   .find(channel => channel.type == "voice" && channel.joined)
   if(vchannel){
@@ -76,7 +75,6 @@ chatHandler.registerCommand('vsay', ['s', 'say', 'vs'], function(handler, obj, a
     })
   }
 });
-
 
 chatHandler.registerCommand('vjoin', [], function(handler, obj, author, content, args){
   var vchannel =
@@ -91,7 +89,6 @@ chatHandler.registerCommand('vjoin', [], function(handler, obj, author, content,
   });
 });
 
-
 chatHandler.registerCommand('vstop', [], function(handler, obj, author, content, args){
   // var info = client.VoiceConnections.getForGuild(guild);
   // if (info) {
@@ -101,7 +98,6 @@ chatHandler.registerCommand('vstop', [], function(handler, obj, author, content,
   announceQueue = [];
 });
 
-
 chatHandler.registerCommand('quit', [], function(handler, obj, author, content, args){
   handler.bot.Channels
   .filter(channel => channel.type == "voice" && channel.joined)
@@ -110,8 +106,6 @@ chatHandler.registerCommand('quit', [], function(handler, obj, author, content, 
   keepRunning = false;
   handler.bot.disconnect();
 });
-
-
 
 chatHandler.registerCommand('youtube', ['yt'], function(handler, obj, author, content, args){
   const youtube = new YoutubeNode();
@@ -131,68 +125,6 @@ chatHandler.registerCommand('youtube', ['yt'], function(handler, obj, author, co
   });
 });
 
-
-// client.Dispatcher.on(Discord.Events.MESSAGE_CREATE, chatHandler.)
-
-
-// client.Dispatcher.on("MESSAGE_CREATE", e => {
-//   const user = e.message.author;
-  
-//   if(!admins[user.id]){
-//     return;
-//   }
-
-//   const channel = e.message.channel;
-//   const guild = e.message.channel.guild;
-
-//   if(e.message.content.indexOf('::') == 0){
-//     const content = e.message.content.substring(2);
-//   }else{
-//     return;
-//   }
-
-//   if (content == "ping") {
-//     channel.sendMessage("pong");
-//   }
-
-//   if (content == "vleave") {
-//     client.Channels
-//     .filter(channel => channel.type == "voice" && channel.joined)
-//     .forEach(channel => channel.leave());
-//   }
-
-//   if (content.indexOf("vjoin ") == 0) {
-//     const targetChannel = content.replace("vjoin ", "");
-
-//     var vchannel =
-//       guild.voiceChannels
-//       .find(channel => channel.name.indexOf(targetChannel) >= 0);
-//     if (vchannel) vchannel.join().then(info => {
-//       var channel = info.voiceConnection.channel;
-//       channelMap[channel.id] = [];
-//       channel.members.forEach(member => {
-//         channelMap[channel.id][member.id] = {connected: true, time: Math.floor(Date.now() / 1000)}
-//       });
-//     });
-//   }
-
-//   if (content.indexOf("stop") == 0) {
-//     var info = client.VoiceConnections.getForGuild(guild);
-//     if (info) {
-//       var encoderStream = info.voiceConnection.getEncoderStream();
-//       encoderStream.unpipeAll();
-//     }
-//   }
-
-//   if (content.indexOf("quit") == 0) {
-//     client.Channels
-//     .filter(channel => channel.type == "voice" && channel.joined)
-//     .forEach(channel => channel.leave());
-//     channel.sendMessage("Good Bye");
-//     keepRunning = false;
-//     client.disconnect();
-//   }
-// });
 
 // client.Dispatcher.on("VOICE_CONNECTED", e => {
 //   // uncomment to play on join
@@ -214,11 +146,11 @@ client.Dispatcher.on("VOICE_CHANNEL_JOIN", e => {
         channelMap[vchannel.id][e.user.id] = {connected: true, time: 0};
       }
 
-      if(Math.floor(Date.now() / 1000) - channelMap[vchannel.id][e.user.id].time < timeoutTime){
+      if(Date.now() - channelMap[vchannel.id][e.user.id].time < timeoutTime){
         return;
       }
       channelMap[vchannel.id][e.user.id].connected = true;
-      channelMap[vchannel.id][e.user.id].time = Math.floor(Date.now() / 1000);
+      channelMap[vchannel.id][e.user.id].time = Date.now();
       var user = e.user.memberOf(e.guildId);
       var name;
       if(user){
@@ -248,11 +180,11 @@ client.Dispatcher.on("VOICE_CHANNEL_LEAVE", e => {
 //    console.log("LEAVE");
 //    console.log(vchannel);
     // async.nextTick(function(){
-      if(Math.floor(Date.now() / 1000) - channelMap[vchannel.id][e.user.id].time < timeoutTime){
+      if(Date.now() - channelMap[vchannel.id][e.user.id].time < timeoutTime){
         return;
       }
       channelMap[vchannel.id][e.user.id].connected = false;
-      channelMap[vchannel.id][e.user.id].time = Math.floor(Date.now() / 1000);
+      channelMap[vchannel.id][e.user.id].time = Date.now();
       var user = e.user.memberOf(e.guildId);
       var name;
       if(user){
@@ -279,11 +211,11 @@ client.Dispatcher.on('PRESENCE_UPDATE', e => {
       if(!channelMap[vchannel.id][e.user.id] || !channelMap[vchannel.id][e.user.id].connected){
         return;
       }
-      if(Math.floor(Date.now() / 1000) - channelMap[vchannel.id][e.user.id].time < timeoutTime){
+      if(Date.now() - channelMap[vchannel.id][e.user.id].time < timeoutTime){
         return;
       }
       channelMap[vchannel.id][e.user.id].connected = false;
-      channelMap[vchannel.id][e.user.id].time = Math.floor(Date.now() / 1000);
+      channelMap[vchannel.id][e.user.id].time = Date.now();
       var user = e.user.memberOf(e.guild);
       var name;
       if(user){
@@ -315,7 +247,7 @@ function runTickNow() {
       str: eve.action,
       speed: 1
     })
-    .then(function(aPath){
+    .then(aPath => {
 
       var encoder = info.voiceConnection.createExternalEncoder({
         type: "ffmpeg",
@@ -337,7 +269,7 @@ function runTickNow() {
 //      encoderStream.on("timestamp", time => console.log("Time " + time));
 
     })
-    .catch(function(err){
+    .catch(err => {
       console.error(err);
     });
   }else{
