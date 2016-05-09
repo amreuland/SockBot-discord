@@ -67,7 +67,7 @@ GoogleTTS.prototype.getFile = function(obj) {
   // Get the file signature
   var signature = md5(_.values(_.omit(qs, 'key')).join('-'));
   var cacheDir = path.join(self.opts.cache, self.name, opts.lang, opts.speed.toString(), signature.substr(0,2));
-  var cacheFile = slugify(opts.str) + '_' + signature + '.' + self.opts.format;
+  var cacheFile = `${slugify(opts.str)}_${signature}.${self.opts.format}`;
   var cachePath = path.join(cacheDir, cacheFile);
 
 
@@ -95,7 +95,7 @@ GoogleTTS.prototype.getFile = function(obj) {
     }
 
     if(isF){
-      console.log('Play file "' + cacheFile + '" from cache');
+      console.log(`Play file '${cacheFile}' from cache`);
       return true;
     }else{
       throw e;
@@ -114,7 +114,7 @@ GoogleTTS.prototype.getFile = function(obj) {
       .then(function(url){
         return new Promise(function(resolve, reject){
           var audio_file = fs.createWriteStream(cachePath);
-          console.log('Request sound file "' + url + '"');
+          console.log(`Request sound file '${url}'`);
           request.get({
             url: url,
             headers: {
@@ -126,7 +126,7 @@ GoogleTTS.prototype.getFile = function(obj) {
             audio_file.write(data);
           })
           .on('end', function(){
-            console.log('Saving sound file "' + cachePath + '"');
+            console.log(`Saving sound file '${cachePath}'`);
             audio_file.end();
             resolve(cachePath);
           })

@@ -30,7 +30,7 @@ client.connect({
 })
 
 client.Dispatcher.on("GATEWAY_READY", e => {
-  console.log("Connected as: " + client.User.username);
+  console.log(`Connected as: ${client.User.username}`);
 
   var vchannel =
     client.Channels
@@ -49,81 +49,113 @@ var chatHandler = new ChatHandler(client);
 
 chatHandler.register();
 
-chatHandler.registerCommand('ping', [], function(handler, obj, author, content, args){
-  obj.channel.sendMessage('pong');
-});
-
-chatHandler.registerCommand('test', ['t'], function(handler, obj, author, content, args){
-  obj.channel.sendMessage(args.slice(1).join(' '));
-});
-
-chatHandler.registerCommand('vleave', [], function(handler, obj, author, content, args){
-  handler.bot.Channels
-  .filter(channel => channel.type == "voice" && channel.joined)
-  .forEach(channel => channel.leave());
-});
-
-chatHandler.registerCommand('vsay', ['s', 'say', 'vs'], function(handler, obj, author, content, args){
-  var vchannel = handler.bot.Channels
-  .find(channel => channel.type == "voice" && channel.joined)
-  if(vchannel){
-    announceQueue.push({
-      action: args.slice(1).join(' '),
-      guild: obj.channel.guild.id,
-      channel: obj.channel.id,
-      info: vchannel.getVoiceConnectionInfo()
-    })
+chatHandler.registerCommand('ping', [],
+  (handler, obj, args) => {
+    handler.reply(obj, 'pong');
   }
-});
+);
 
-chatHandler.registerCommand('vjoin', [], function(handler, obj, author, content, args){
-  var vchannel =
-    obj.channel.guild.voiceChannels
-    .find(channel => channel.name.indexOf(args.slice(1).join(' ')) >= 0);
-  if (vchannel) vchannel.join().then(info => {
-    var channel = info.voiceConnection.channel;
-    channelMap[channel.id] = [];
-    channel.members.forEach(member => {
-      channelMap[channel.id][member.id] = {connected: true, time: Math.floor(Date.now() / 1000)}
+chatHandler.registerCommand('test', ['t'],
+  (handler, obj, args) => {
+    handler.reply(obj, args.join(' '));
+  }
+);
+
+chatHandler.registerCommand('vleave', [],
+  (handler, obj, args) => {
+    var g = handler.getGuild(obj);
+    if(!g) return handler.reply(obj, 'Nuh.');
+    g.voiceChannels
+    .filter(channel => channel.joined)
+    .forEach(channel => channel.leave());
+  }
+);
+
+chatHandler.registerCommand('vsay', ['s', 'say', 'vs', ']'],
+  (handler, obj, args) => {
+    var g = handler.getGuild(obj);
+    if(!g) return handler.reply(obj, 'Nuh.');
+    
+    var vchannel = g.voiceChannels.find(channel => channel.joined)
+
+    if(vchannel){
+      announceQueue.push({
+        action: args.join(' '),
+        guild: g,
+        // channel: handler.getChannel(obj).id;
+        info: vchannel.getVoiceConnectionInfo()
+      })
+    }
+  }
+);
+
+chatHandler.registerCommand('vjoin', [],
+  (handler, obj, args) => {
+    var g = handler.getGuild(obj);
+    if(!g) return handler.reply(obj, 'Nuh.');
+
+    var vchannel;
+    if(args.length === 0){
+      var user = handler.getAuthor(obj);
+      vchannel = user.getVoiceChannel(g);
+      if(!vchannel) return handler.reply(obj, `${user.mention} Idiot. Where do you think you are?`);
+
+    }else{
+      var cname = args.join(' ');
+      vchannel = g.voiceChannels.find(channel => channel.name.indexOf(cname) >= 0);
+      if(!vchannel) return handler.reply(obj, `'${cname}' is not a valid voice channel`)
+    }
+
+    if (vchannel) vchannel.join().then(info => {
+      channelMap[vchannel.id] = [];
+      vchannel.members.forEach(member => {
+        channelMap[vchannel.id][member.id] = {connected: true, time: Date.now()}
+      });
     });
-  });
-});
+  }
+);
 
-chatHandler.registerCommand('vstop', [], function(handler, obj, author, content, args){
+chatHandler.registerCommand('vstop', [],
+  (handler, obj, args) => {
   // var info = client.VoiceConnections.getForGuild(guild);
   // if (info) {
   //   var encoderStream = info.voiceConnection.getEncoderStream();
   //   encoderStream.unpipeAll();
   // }
-  announceQueue = [];
-});
+    announceQueue = [];
+  }
+);
 
-chatHandler.registerCommand('quit', [], function(handler, obj, author, content, args){
-  handler.bot.Channels
-  .filter(channel => channel.type == "voice" && channel.joined)
-  .forEach(channel => channel.leave());
-  obj.channel.sendMessage("Good Bye");
-  keepRunning = false;
-  handler.bot.disconnect();
-});
+chatHandler.registerCommand('quit', [],
+  (handler, obj, args) => {
+    handler.getBot().Channels
+    .filter(channel => channel.type == "voice" && channel.joined)
+    .forEach(channel => channel.leave());
+    handler.reply(obj, "Good Bye");
+    keepRunning = false;
+    handler.getBot().disconnect();
+  }
+);
 
-chatHandler.registerCommand('youtube', ['yt'], function(handler, obj, author, content, args){
-  const youtube = new YoutubeNode();
-  youtube.setKey(conf.youtube.api_key);
-  youtube.addParam('type', 'video,playlist');
-  youtube.search(args.slice(1).join(' '), 1, (err, res1) => {
-    Promise.resolve(res1).then(result => {
-      if (!result || !result.items || result.items.length < 1) return `${T('youtube_error', lang)}: ${suffix}`;
-      const id_obj = result.items[0].id;
-      if (id_obj.playlistId) return `https://www.youtube.com/playlist?list=${id_obj.playlistId}`;
-      return `http://www.youtube.com/watch?v=${id_obj.videoId}`;
-    })
-    .then(res => {
-      obj.channel.sendMessage(res);
-    })
-    .catch(err => console.error(err));
-  });
-});
+chatHandler.registerCommand('youtube', ['yt'],
+  (handler, obj, args) => {
+    const youtube = new YoutubeNode();
+    youtube.setKey(conf.youtube.api_key);
+    youtube.addParam('type', 'video,playlist');
+    youtube.search(args.join(' '), 1, (err, res1) => {
+      Promise.resolve(res1).then(result => {
+        if (!result || !result.items || result.items.length < 1) return "Youtube dun fucked up";
+        const id_obj = result.items[0].id;
+        if (id_obj.playlistId) return `https://www.youtube.com/playlist?list=${id_obj.playlistId}`;
+        return `http://www.youtube.com/watch?v=${id_obj.videoId}`;
+      })
+      .then(res => {
+        handler.reply(obj, res);
+      })
+      .catch(err => console.error(err));
+    });
+  }
+);
 
 
 // client.Dispatcher.on("VOICE_CONNECTED", e => {
@@ -159,9 +191,9 @@ client.Dispatcher.on("VOICE_CHANNEL_JOIN", e => {
         name = e.user.username;
       }
       announceQueue.push({
-        action: name + ' has joined the channel',
+        action: `${name} has joined the channel`,
         guild: e.guildId,
-        channel: e.channelId,
+        // channel: e.channelId,
         info: vchannel.getVoiceConnectionInfo()
       })
       // console.log(channelMap[vchannel.id][e.user.id]);
@@ -193,9 +225,9 @@ client.Dispatcher.on("VOICE_CHANNEL_LEAVE", e => {
         name = e.user.username;
       }
       announceQueue.push({
-        action: name + ' has left the channel',
+        action: `${name} has left the channel`,
         guild: e.guildId,
-        channel: e.channelId,
+        // channel: e.channelId,
         info: vchannel.getVoiceConnectionInfo()
       })
       // console.log(channelMap[vchannel.id][e.user.id]);
@@ -224,9 +256,9 @@ client.Dispatcher.on('PRESENCE_UPDATE', e => {
         name = e.user.username;
       }
       announceQueue.push({
-        action: name + ' has gone offline',
+        action: `${name} has gone offline`,
         guild: e.guild.guildId,
-        channel: e.channelId,
+        // channel: e.channelId,
         info: vchannel.getVoiceConnectionInfo()
       })
       // console.log(channelMap[vchannel.id][e.user.id]);

@@ -1,6 +1,7 @@
 "use strict";
 
 var Discord = require('discordie');
+// var EventHandler = require('')
 
 var admins = {
   '144600822737534976': 'noriah',
@@ -10,6 +11,7 @@ var admins = {
 const chatPrefix = ']';
 
 class ChatHandler {
+  
   constructor(bot){
     this.bot = bot;
     this.commands = {};
@@ -26,7 +28,7 @@ class ChatHandler {
 
   register(){
     this.cmdHandler = this.createHandlerCommand();
-    this.bot.Dispatcher.on("MESSAGE_CREATE", this.cmdHandler);
+    this.bot.Dispatcher.on(Discord.Events.MESSAGE_CREATE, this.cmdHandler);
   }
 
   destroy() {
@@ -42,7 +44,7 @@ class ChatHandler {
   registerCommand(id, aliases, runnable) { //defaultPerm
     
     if(this.commands[id] !== undefined){
-      throw new Error('Command with id \'' + id + '\' already exists');
+      throw new Error(`Command with id '${id}' already exists`);
     }
 
     aliases = aliases || [];
@@ -58,7 +60,7 @@ class ChatHandler {
 
     aliases.forEach(alias => {
       if(this.aliases[alias] !== undefined){
-        throw new Error('Alias \'' + alias + '\' already exists (' + this.aliases[alias] + ')')
+        throw new Error(`Alias '${alias}'already exists (${this.aliases[alias]})`)
       }
       this.aliases[alias] = id;
     });
@@ -71,7 +73,7 @@ class ChatHandler {
   }
 
   createHandlerCommand(){
-    return function(e){
+    return (e) => {
       if(!e.message) return;
       if(this.bot.User.id === e.message.author.id) return;
       if(!admins[e.message.author.id]) return;
@@ -86,14 +88,37 @@ class ChatHandler {
       }
       var args = content.trim().split(/\s+/);
       if(args.length < 1) return;
-      var alias = args[0].toLowerCase();
+      var alias = args.shift().toLowerCase();
       if(!this.aliases[alias]) return;
       var cmd = this.aliases[alias];
       var command = this.commands[cmd];
-      command.run(this, e.message, e.message.author, e.message.content, args);
-    }.bind(this);
+      command.run(this, e, args);
+    }
 
   }
+
+  reply(e, str){
+    e.message.channel.sendMessage(str);
+  }
+
+  getBot(){
+    return this.bot;
+  }
+
+  getChannel(e){
+    // if(e instanceof )
+    return e.message.channel;
+  }
+
+  getAuthor(e){
+    return e.message.author;
+  }
+
+  getGuild(e){
+    return e.message.guild;
+  }
+
+
 
 
 }
