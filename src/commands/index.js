@@ -1,6 +1,7 @@
+
+const Promise = require('bluebird');
 const glob = require('glob');
 const R = require('ramda');
-const Promise = require('bluebird');
 
 
 const glob_options = {
@@ -15,9 +16,13 @@ const command_files = R.uniq(R.unnest([
   glob.sync(`${__dirname}/*(!(help))/*.js`, glob_options)
 ]));
 // Merge all the commands objecs together and export.
-const commands = R.mergeAll(R.map(js_path => {
+
+// console.log(command_files)
+const commands = R.filter(a => a !== undefined, R.flatten(R.map(js_path => {
   var f = require(js_path);
   if(f.commands) return f.commands;
-}, command_files));
+}, command_files)));
+
+// console.log(commands);
 
 module.exports = commands;

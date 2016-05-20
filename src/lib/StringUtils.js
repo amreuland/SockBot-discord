@@ -1,7 +1,7 @@
-'usr strict';
+'usr strict'
 
-const Promise = require('bluebird');
-const R = require('ramda');
+const Promise = require('bluebird')
+const R = require('ramda')
 
 // class Markdown {
 //   constructor(){
@@ -16,6 +16,14 @@ module.exports = {
     underline: text => `__${text}__`,
     strikeout: text => `~~${text}~~`,
     inline: text => `\`${text}\``,
+    boldInline: text => `**\`${text}\`**`,
     code: (text, syntax) => `\`\`\`${syntax || ''}\n${text}\n\`\`\``,
+  },
+
+  SplitString: str => str.trim().split(/ +/),
+  toTitleCase: str => {
+    return str.replace(/\w\S*/g, (txt) => {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    })
   }
 }

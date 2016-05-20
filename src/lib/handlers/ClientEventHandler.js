@@ -1,6 +1,6 @@
 'use strict';
 
-const EventHandler = require('./EventHandler');
+const EventHandler = require('./EventHandler')
 
 class ClientEventHandler extends EventHandler {
   constructor(client){

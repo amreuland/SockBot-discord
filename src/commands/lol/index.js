@@ -1,23 +1,40 @@
 'use strict';
 
-const Promise = require('bluebird');
-const conf = require('config');
-const R = require('ramda');
-const riot = require('./riot');
-const CommandHandler = require('lib/command/CommandHandler');
-const M = require('lib/Util').Markdown;
+// const Promise = require('bluebird');
+// const conf = require('config');
+// const R = require('ramda');
+// const CommandGroup = require('lib/command/CommandGroup');
+// const CommandGroup = require('lib/command/CommandGroup');
+
+const Promise = require('bluebird')
+const conf = require('config')
+const R = require('ramda')
+
+const { SimpleCommand } = require('lib/command/Command')
+const CommandGroup = require('lib/command/CommandGroup')
+
+const { Markdown:M } = require('lib/StringUtils')
+
+const { matchDetails } = require('./riot')
+// import
 
 // function lolUsage()
 
-var commander = new CommandHandler();
+var commander = new CommandGroup({
+  id: 'league',
+  aliases: ['lol'],
+  categories: ['games', 'fun'],
+  parameters: ['<action>', '[action args]'],
+  description: 'Commands that help with League of Legends',
+});
 
-commander.registerCommand({
+commander.registerCommand(new SimpleCommand({
   id: 'match',
-  run: riot.matchDetails,
-  params: ['region', 'summoner']
-})
+  run: matchDetails,
+  parameters: ['<region>', '<summoner>'],
+  description: 'Get the current match for a summoner'
+}))
 
-
-module.exports.commands = {
-  league: {run: (handler, evt, args) => commander.run(handler, evt, args), aliases: ['lol']}
-}
+module.exports.commands = [
+  commander
+]

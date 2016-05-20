@@ -1,21 +1,20 @@
-'use strict';
+'use strict'
 
-const Discord = require('discordie');
-const path = require('path');
-const async = require('async');
-const sleep = require('sleep');
-const lame = require('lame');
-const fs = require('fs');
-const Promise = require('bluebird');
+const Promise = require('bluebird')
+const Discord = require('discordie')
+const path = require('path')
+const async = require('async')
+const fs = require('fs')
+const R = require('ramda')
+const conf = require('config')
 
+const GoogleTTS = require('lib/GoogleTTS')
+const ChatHandler = require('lib/handlers/ChatHandler')
+const { Markdown:M } = require('lib/StringUtils')
+const { UsageError } = require('lib/command/Errors')
+const { SimpleCommand, TextCommand } = require('lib/command/Command')
 
-const R = require('ramda');
-const conf = require('config');
-
-const GoogleTTS = require('lib/GoogleTTS');
-const ChatHandler = require('lib/handlers/ChatHandler');
-
-const commands = require('commands/');
+const commands = require('commands/')
 // console.log(commands);
 
 var timeoutTime = 10000;
@@ -46,11 +45,13 @@ function connect() {
 function handleConnection(evt) {
   console.log(`Connected as: ${client.User.username}`);
 
+  client.User.setStatus('online', {name: 'Half-Life 3'});
+
   var vchannel =
     client.Channels
     .find(channel => channel.type == "voice" && channel.name.indexOf('General') >= 0);
 
-  // if (vchannel) vchannel.join();
+  if (vchannel) vchannel.join();
 
   connected = true;
 }
@@ -86,57 +87,65 @@ var queueMessage = function(channel, guild, tchannel, message){
 }
 
 chatHandler.registerHandler();
-R.forEach(cmd => {
-  var c = commands[cmd]
-  c.id = cmd;
-  chatHandler.registerCommand(c)
-}, Object.keys(commands))
+R.forEach(cmd => chatHandler.registerCommand(cmd), commands);
 
 
-chatHandler.registerCommand({
-  id:'ping',
-  run: (handler, obj, args) => {
-    return Promise.resolve('pong');
-  }
-});
+chatHandler.registerCommand(new TextCommand({
+  id: 'ping',
+  text: 'Pong!',
+  categories: ['fun'],
+  description: 'Pong!'
+}));
 
-chatHandler.registerCommand({
-  id:'test',
-  alias: ['t'],
-  run: (handler, obj, args) => {
-    return Promise.resolve(args.join(' '));
-  }
-});
+chatHandler.registerCommand(new SimpleCommand({
+  id: 'test',
+  aliases: ['t'],
+  categories: ['system'],
+  run: (handler, obj, args) => Promise.resolve(args.join(' ')),
+  description: 'Repeat what I say'
+}));
 
-chatHandler.registerCommand({
-  id:'vleave',
+chatHandler.registerCommand(new SimpleCommand({
+  id: 'vleave',
+  categories: ['voice'],
   run: (handler, obj, args) => {
     var g = handler.getGuild(obj);
-    if(!g) return Promise.resolve('Nuh.');
+    if(!g) return Promise.resolve('No server found in relation to this message.');
     g.voiceChannels
     .filter(channel => channel.joined)
     .forEach(channel => channel.leave());
-  }
-});
+  },
+  description: 'Disconnect SockBot from voice chat'
+}))
 
-chatHandler.registerCommand({
+chatHandler.registerCommand(new SimpleCommand({
   id: 'vsay',
-  alias: ['s', 'say', 'vs', ']'],
+  aliases: ['s', 'say', 'vs', ']'],
+  categories: ['voice'],
+  parameters: ['<message>'],
   run: (handler, obj, args) => {
     var g = handler.getGuild(obj);
     if(!g) return Promise.resolve('Nuh.');
     
     var vchannel = g.voiceChannels.find(channel => channel.joined)
 
+    if(args.length <= 0){
+      return Promise.reject(new UsageError(['No Message Provided']))
+    }
+
     if(vchannel){
       queueMessage(vchannel, g, handler.getChannel(obj), args.join(' '));
+    } else {
+      return Promise.resolve('Error: Not connected to a Voice Channel');
     }
-  }
-});
+  },
+  description: 'Make SockBot say something. Uses Google Translate TTS.'
+}))
 
 
-chatHandler.registerCommand({
+chatHandler.registerCommand(new SimpleCommand({
   id: 'joke',
+  categories: ['fun'],
   run: (handler, obj, args) => {
     var g = handler.getGuild(obj);
     if(!g) return Promise.resolve('Nuh.');
@@ -150,14 +159,17 @@ chatHandler.registerCommand({
       queueMessage(vchannel, g, handler.getChannel(obj), "Well im done. You dicks can all go to hell");
       queueMessage(vchannel, g, handler.getChannel(obj), "Go fuck your selves.");
     }
-  }
-});
+  },
+  description: 'It\'s a joke?'
+}))
 
-chatHandler.registerCommand({
+chatHandler.registerCommand(new SimpleCommand({
   id: 'vjoin',
+  parameters: ['[voice channel]'],
+  categories: ['voice'],
   run: (handler, obj, args) => {
     var g = handler.getGuild(obj);
-    if(!g) return Promise.resolve('Nuh.');
+    if(!g) return;
 
     var vchannel;
     if(args.length === 0){
@@ -168,15 +180,19 @@ chatHandler.registerCommand({
     }else{
       var cname = args.join(' ');
       vchannel = g.voiceChannels.find(channel => channel.name.indexOf(cname) >= 0);
-      if(!vchannel) return Promise.resolve(`'${cname}' is not a valid voice channel`)
+      if(!vchannel){
+        return Promise.resolve(`Error: ${M.bold(cname)} is not a valid voice channel`)
+      }
     }
 
     if (vchannel) vchannel.join();
-  }
-});
+  },
+  description: 'Make SockBot join the same voice channel as the user.\nIf supplied with a channel name, join that channel instead.'
+}))
 
-chatHandler.registerCommand({
+chatHandler.registerCommand(new SimpleCommand({
   id: 'vstop',
+  categories: ['voice'],
   run: (handler, obj, args) => {
   // var info = client.VoiceConnections.getForGuild(guild);
   // if (info) {
@@ -184,11 +200,13 @@ chatHandler.registerCommand({
   //   encoderStream.unpipeAll();
   // }
     announceQueue = [];
-  }
-});
+  },
+  description: 'Make SockBot stop talking (May not work. SockBot likes to talk.)'
+}))
 
-chatHandler.registerCommand({
+chatHandler.registerCommand(new SimpleCommand({
   id: 'quit',
+  categories: ['system'],
   run: (handler, obj, args) => {
     handler.getClient().Channels
     .filter(channel => channel.type == "voice" && channel.joined)
@@ -198,8 +216,11 @@ chatHandler.registerCommand({
       keepRunning = false;
       return res;
     });
-  }
-});
+  },
+  description: 'Shutdown the bot'
+}))
+
+chatHandler.finalize();
 
 
 client.Dispatcher.on("VOICE_CHANNEL_JOIN", evt => {
@@ -285,7 +306,7 @@ client.Dispatcher.on('PRESENCE_UPDATE', evt => {
       }else{
         name = evt.user.username;
       }
-      queueMessage(vchannel, evt.guildId, null, `${name} has left gone offline`);
+      queueMessage(vchannel, evt.guildId, null, `${name} has gone offline`);
     }
   }
 });
@@ -320,7 +341,7 @@ function runTickNow() {
     .catch(err => {
       console.error(err.stack);
       if(eve.tchannel && eve.tchannel !== null){
-        eve.tchannel.sendMessage('```' + err.stack + '```');
+        eve.tchannel.sendMessage(M.code(err.stack));
       }
     });
   }else{
