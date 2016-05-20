@@ -1,6 +1,6 @@
 # SockBot
 
-![Dependency Status](https://david-dm.org/amreuland/sockbot.svg)](https://david-dm.org/amreuland/sockbot)
+[![Dependency Status](https://david-dm.org/amreuland/sockbot.svg)](https://david-dm.org/amreuland/sockbot)
 
 ## About
 
@@ -15,4 +15,4 @@ All commands must be prefxied with `]`
 Command arguments follow the format `<required> (optional)`
 #### Games:
 - `lol` - Commands for league of legends
-- `lol match ()
+- `lol match <region> <summoner>` - Get current match data for a summoner in a region
