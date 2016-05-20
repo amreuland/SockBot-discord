@@ -11,14 +11,21 @@ const { percentage } = require('lib/MathUtils')
 const { Command } = require('lib/command/Command')
 const { UsageError } = require('lib/command/Errors')
 
-var lolClient = lol.client({
-  apiKey: conf.league.api_keys.riot,
-  cache: lol.redisCache({
-    host: '127.0.0.1',
-    port: 6379,
+var opts = {
+  apiKey: conf.riot.key,
+  rateLimit: conf.riot.rateLimits,
+  cache: null
+}
+
+if(conf.caching.enabled) {
+  opts.cache = lol.redisCache({
+    host: conf.caching.host,
+    port: conf.caching.port,
     keyPrefix: 'loljs'
   })
-})
+}
+
+var lolClient = lol.client(opts)
 
 class InvalidRegionError extends Error {}
 class NotInGameError extends Error {}
@@ -145,7 +152,7 @@ const matchDetails = (handler, evt, args) => {
     const game_text = `Playing ${M.bold(lol.constants.modes[matchData.gameMode])} on ${M.bold(lol.constants.maps[matchData.mapId].name)}`
     const time_text = `Started at ${M.underline(moment(matchData.gameStartTime).format('HH:mm__ [on] __MM/DD/YY'))}`
     const length_text = `Current Length: ${moment.unix(matchData.gameLength).utc().format('HH:mm:ss')}`
-    const header_text = `${game_text}\n\n${time_text}  |  ${length_text}`
+    const header_text = `${game_text}\n\n${matchData.gameStartTime > 0 ? time_text : 'Has Not Started Yet'}  |  ${length_text}`
     const summoner_team = R.find(R.propEq('summonerId', summonerId), data).teamId === 100 ? 'Blue' : 'Red'
     const title_text = `Found Potato: ${M.bold(summoner)} on the ${M.underline(summoner_team)} side.`
 

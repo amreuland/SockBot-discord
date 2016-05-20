@@ -9,8 +9,34 @@ const request = require('request')
 const slugify = require('underscore.string/slugify')
 const gTTSGen = require('google-tts-api')
 
+// var MemoryStream = require('memorystream');
+
 const ensureDirAsync = Promise.promisify(fs.ensureDir);
 const existsAsync = Promise.promisify(fs.exists);
+
+// class Thingy {
+//   constructor(url){
+//     this.memStream = new MemoryStream();
+//     this.url = url;
+//   }
+
+//   go(){
+//     request.get({
+//       url: this.url,
+//       headers: {
+//         'user-agent': 'Mozilla/5.0'
+//       }
+//     })
+//     .on('error', console.error)
+//     .on('data', data => {
+//       this.memStream.write(data);
+//     })
+//     .on('end', () => {
+//       this.memStream.end()
+//     })
+//   }
+// }
+
 
 class GoogleTTS {
   constructor(options){
@@ -43,7 +69,7 @@ class GoogleTTS {
     // Get the file signature
     const signature = md5(R.join('-', R.values(qs)));
     const cacheDir = path.join(this.cache, this.name, options.lang, signature.substr(0,2));
-    const cacheFile = `${slugify(options.str).substring(0,50)}_${signature}.${this.format}`;
+    const cacheFile = `${slugify(options.str).substring(0,50)}_${signature}`;
     const cachePath = path.join(cacheDir, cacheFile);
 
     return ensureDirAsync(cacheDir)
@@ -52,6 +78,7 @@ class GoogleTTS {
       if(e.message === 'true') return true;
       throw e;
     })
+    // .return(false)
     .then(res => {
       if(res === true){
         console.log(`Play file '${cacheFile}' from cache`);
@@ -59,6 +86,7 @@ class GoogleTTS {
       }else{
         return gTTSGen(options.str, options.lang, this.speed)
         .then(url => {
+          // return new Thingy(url)
           return new Promise((resolve, reject) => {
             var audio_file = fs.createWriteStream(cachePath);
             console.log(`Request sound file '${url}'`);
