@@ -1,6 +1,6 @@
 'use strict';
 
-const EventHandler = require('./EventHandler');
+const EventHandler = require('./EventHandler')
 
 class ChannelEventHandler extends EventHandler {
   constructor(client){

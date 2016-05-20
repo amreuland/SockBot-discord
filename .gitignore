@@ -1,4 +1,7 @@
 node_modules
 config.js
-config/
 data/
+
+src/lib/lol-js
+
+config/default.js

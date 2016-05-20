@@ -1,13 +1,13 @@
 'use strict';
 /* globals _: true, request: true */
-const Promise = require('bluebird');
-const R = require('ramda');
-const md5 = require('MD5');
-const fs = require('fs-extra');
-const path = require('path');
-const request = require('request');
-const slugify = require("underscore.string/slugify");
-const gTTSGen = require('google-tts-api');
+const Promise = require('bluebird')
+const R = require('ramda')
+const md5 = require('MD5')
+const fs = require('fs-extra')
+const path = require('path')
+const request = require('request')
+const slugify = require('underscore.string/slugify')
+const gTTSGen = require('google-tts-api')
 
 const ensureDirAsync = Promise.promisify(fs.ensureDir);
 const existsAsync = Promise.promisify(fs.exists);
