@@ -1,28 +1,27 @@
+'use strict'
 
-const Promise = require('bluebird');
-const glob = require('glob');
-const R = require('ramda');
+const glob = require('glob')
+const R = require('ramda')
 
-
-const glob_options = {
+const globOptions = {
   realpath: true,
   nodir: true
-};
+}
 
-const command_files = R.uniq(R.unnest([
-  glob.sync(`${__dirname}/*(!(index.js))`, glob_options),
-  glob.sync(`${__dirname}/*/index.js`, glob_options),
-  glob.sync(`${__dirname}/*/*/index.js`, glob_options),
-  glob.sync(`${__dirname}/*(!(help))/*.js`, glob_options)
-]));
+const commandFiles = R.uniq(R.unnest([
+  glob.sync(`${__dirname}/*(!(index.js))`, globOptions),
+  glob.sync(`${__dirname}/*/index.js`, globOptions),
+  glob.sync(`${__dirname}/*/*/index.js`, globOptions),
+  glob.sync(`${__dirname}/*(!(help))/*.js`, globOptions)
+]))
 // Merge all the commands objecs together and export.
 
-// console.log(command_files)
-const commands = R.filter(a => a !== undefined, R.flatten(R.map(js_path => {
-  var f = require(js_path);
-  if(f.commands) return f.commands;
-}, command_files)));
+// console.log(commandFiles)
+const commands = R.filter(a => a !== undefined, R.flatten(R.map(jsPath => {
+  var f = require(jsPath)
+  if (f.commands) return f.commands
+}, commandFiles)))
 
 // console.log(commands);
 
-module.exports = commands;
+module.exports = commands

@@ -1,15 +1,13 @@
-'use strict';
+'use strict'
 
 class EventHandler {
-
-  constructor(client){
-    this.client = client;
+  constructor (client) {
+    this.client = client
   }
 
-  getClient(){
-    return this.client;
+  getClient () {
+    return this.client
   }
 }
 
-
-module.exports = EventHandler;
+module.exports = EventHandler
