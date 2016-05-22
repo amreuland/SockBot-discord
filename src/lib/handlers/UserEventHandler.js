@@ -1,11 +1,7 @@
-'use strict';
+'use strict'
 
 const EventHandler = require('./EventHandler')
 
-class UserEventHandler extends EventHandler {
-  constructor(client){
-    super(client);
-  }
-}
+class UserEventHandler extends EventHandler {}
 
-module.exports = UserEventHandler;
+module.exports = UserEventHandler

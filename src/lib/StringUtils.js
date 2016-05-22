@@ -1,14 +1,5 @@
 'usr strict'
 
-const Promise = require('bluebird')
-const R = require('ramda')
-
-// class Markdown {
-//   constructor(){
-    
-//   }
-// }
-
 module.exports = {
   Markdown: {
     bold: text => `**${text}**`,
@@ -17,7 +8,7 @@ module.exports = {
     strikeout: text => `~~${text}~~`,
     inline: text => `\`${text}\``,
     boldInline: text => `**\`${text}\`**`,
-    code: (text, syntax) => `\`\`\`${syntax || ''}\n${text}\n\`\`\``,
+    code: (text, syntax) => `\`\`\`${syntax || ''}\n${text}\n\`\`\``
   },
 
   SplitString: str => str.trim().split(/ +/),

@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 // const Promise = require('bluebird');
 // const conf = require('config');
@@ -6,14 +6,14 @@
 // const CommandGroup = require('lib/command/CommandGroup');
 // const CommandGroup = require('lib/command/CommandGroup');
 
-const Promise = require('bluebird')
-const conf = require('config')
-const R = require('ramda')
+// const Promise = require('bluebird')
+// const conf = require('config')
+// const R = require('ramda')
 
 const { SimpleCommand } = require('lib/command/Command')
 const CommandGroup = require('lib/command/CommandGroup')
 
-const { Markdown:M } = require('lib/StringUtils')
+// const { Markdown: M } = require('lib/StringUtils')
 
 const { matchDetails } = require('./riot')
 // import
@@ -25,8 +25,8 @@ var commander = new CommandGroup({
   aliases: ['lol'],
   categories: ['games', 'fun'],
   parameters: ['<action>', '[action args]'],
-  description: 'Commands that help with League of Legends',
-});
+  description: 'Commands that help with League of Legends'
+})
 
 commander.registerCommand(new SimpleCommand({
   id: 'match',
