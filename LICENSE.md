@@ -2,7 +2,7 @@ SockBot is licensed under the MIT License. The
 
 > Copyright (c) 2016 noriah vix@noriah.dev
 > 
-> https://github.com/noriah/SockBot-discord/contributors
+> https://github.com/SockRobot/SockBot/contributors
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the
