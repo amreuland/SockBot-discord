@@ -1,6 +1,6 @@
 # SockBot
 
-[![Dependency Status](https://img.shields.io/david/amreuland/sockbot.svg?style=flat)](https://david-dm.org/amreuland/sockbot)
+[![Dependency Status](https://img.shields.io/david/sockrobot/sockbot.svg?style=flat)](https://david-dm.org/sockrobot/sockbot)
 
 ## About
 
