@@ -1,18 +1,22 @@
 var path = require('path')
 
-const dataDir = path.normalize(__dirname + '/../data')
+const dataDir = path.normalize(path.join(__dirname, '..', 'data'))
 
 module.exports = {
   // This is your bot token from discord
   // You must create an application on the developers page
   // https://discordapp.com/developers/docs/intro
   token: '',
-  
+
   data_dir: dataDir,
 
   tts: {
     engine: '',
     cache: dataDir + '/cache/tts'
+  },
+
+  sentry: {
+    dsn: ''
   },
 
   chat_prefix: ']',
@@ -37,7 +41,6 @@ module.exports = {
   soundcloud: {
     client_id: '',
     client_secret: ''
-  },
-
+  }
 
 }

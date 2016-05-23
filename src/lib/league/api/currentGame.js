@@ -16,6 +16,9 @@ const getCurrentGame = (region, summonerId) => {
     obRegion = 'OC1'
   }
 
+  if (obRegion === 'ENUE1') {
+    obRegion = 'ENU1'
+  }
 }
 
 module.exports = {
