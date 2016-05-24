@@ -18,12 +18,12 @@ const BaseMastery = {
 const BaseMasteryPage = {
   current: false,
   id: null,
-  masteries: [Mastery],
+  masteries: [MasteryModel],
   name: null
 }
 
 const BaseMasteryPages = {
-  pages: [MasteryPage],
+  pages: [MasteryPageModel],
   summonerId: null
 }
 
@@ -36,62 +36,62 @@ const BaseRunePage = {
   current: false,
   id: null,
   name: null,
-  slots: [RuneSlot]
+  slots: [RuneSlotModel]
 }
 
 const BaseRunePages = {
-  pages: [RunePage],
+  pages: [RunePageModel],
   summonerId: null
 }
 
-class Summoner extends BaseModel {
+class SummonerModel extends BaseModel {
   constructor (def) {
     super(BaseSummoner, def)
   }
 }
 
-class MasteryPages extends BaseModel {
+class MasteryPagesModel extends BaseModel {
   constructor (def) {
     super(BaseMasteryPages, def)
   }
 }
 
-class MasteryPage extends BaseModel {
+class MasteryPageModel extends BaseModel {
   constructor (def) {
     super(BaseMasteryPage, def)
   }
 }
 
-class Mastery extends BaseModel {
+class MasteryModel extends BaseModel {
   constructor (def) {
     super(BaseMastery, def)
   }
 }
 
-class RunePages extends BaseModel {
+class RunePagesModel extends BaseModel {
   constructor (def) {
     super(BaseRunePages, def)
   }
 }
 
-class RunePage extends BaseModel {
+class RunePageModel extends BaseModel {
   constructor (def) {
     super(BaseRunePage, def)
   }
 }
 
-class RuneSlot extends BaseModel {
+class RuneSlotModel extends BaseModel {
   constructor (def) {
     super(BaseRuneSlot, def)
   }
 }
 
 module.exports = {
-  Summoner,
-  MasteryPages,
-  MasteryPage,
-  Mastery,
-  RunePages,
-  RunePage,
-  RuneSlot
+  SummonerModel,
+  MasteryPagesModel,
+  MasteryPageModel,
+  MasteryModel,
+  RunePagesModel,
+  RunePageModel,
+  RuneSlotModel
 }
