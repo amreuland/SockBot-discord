@@ -16,7 +16,9 @@ class FakeRaven {
 
     console.log(`[SENTRY] DUMMY: ${message}`)
 
-    cb && cb(null)
+    if (cb) {
+      cb(null)
+    }
     return null
   }
 
@@ -28,18 +30,20 @@ class FakeRaven {
     console.error(err.stack)
     if (!cb && typeof kwargs === 'function') {
       cb = kwargs
-      kwargs = {}
     }
-    cb && cb(null)
+    if (cb) {
+      cb(null)
+    }
   }
 
   captureQuery (query, engine, kwargs, cb) {
     if (!cb && typeof kwargs === 'function') {
       cb = kwargs
-      kwargs = {}
     }
     console.log(`[SENTRY] DUMMY: ${query}`)
-    cb && cb(null)
+    if (cb) {
+      cb(null)
+    }
     return null
   }
 
