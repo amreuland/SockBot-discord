@@ -86,9 +86,11 @@ const _getChampStatsCurry = R.curry((region, summoner) => {
       if (stats[cId]) {
         summoner.stats.games = stats[cId].totalSessionsPlayed
         summoner.stats.winRate = percentage(stats[cId].totalSessionsWon * 100, stats[cId].totalSessionsPlayed)
-        summoner.stats.kda.k = percentage(stats[cId].totalChampionKills, stats[cId].totalSessionsPlayed, 1)
-        summoner.stats.kda.d = percentage(stats[cId].totalDeathsPerSession, stats[cId].totalSessionsPlayed, 1)
-        summoner.stats.kda.a = percentage(stats[cId].totalAssists, stats[cId].totalSessionsPlayed, 1)
+        summoner.stats.kda = {
+          k: percentage(stats[cId].totalChampionKills, stats[cId].totalSessionsPlayed, 1),
+          d: percentage(stats[cId].totalDeathsPerSession, stats[cId].totalSessionsPlayed, 1),
+          a: percentage(stats[cId].totalAssists, stats[cId].totalSessionsPlayed, 1)
+        }
       }
       return summoner
     })
