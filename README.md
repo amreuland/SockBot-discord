@@ -1,7 +1,7 @@
 # SockBot
 
 [![Code Climate](https://codeclimate.com/github/SockRobot/SockBot/badges/gpa.svg)](https://codeclimate.com/github/SockRobot/SockBot)
-[![Dependency Status](https://img.shields.io/david/sockrobot/sockbot.svg)](https://david-dm.org/sockrobot/sockbot)
+[![Dependency Status](https://david-dm.org/sockrobot/sockbot.svg)](https://david-dm.org/sockrobot/sockbot)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 ## About
