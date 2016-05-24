@@ -1,6 +1,8 @@
 # SockBot
 
-[![Dependency Status](https://img.shields.io/david/sockrobot/sockbot.svg?style=flat)](https://david-dm.org/sockrobot/sockbot)
+[![Code Climate](https://img.shields.io/codeclimate/github/SockRobot/SockBot.svg)](https://codeclimate.com/github/SockRobot/SockBot)
+[![Dependency Status](https://img.shields.io/david/sockrobot/sockbot.svg)](https://david-dm.org/sockrobot/sockbot)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 ## About
 
@@ -8,11 +10,10 @@ SockBot is a *simple* bot for [Discord](https://discordapp.com/). It runs on nod
 
 It's still in major development and will be added to all the time.
 
-
 ## Other Stuff
 
 SockBot uses a redis server for caching data. Data is kept for a varried length of time depending
-on the type of data. 
+on the type of data.
 
 Currently, the chat prefix is `]`. This will be changing once I reach a point that makes sense?
 
