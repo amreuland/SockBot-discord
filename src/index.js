@@ -6,7 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const R = require('ramda')
 const conf = require('config')
-const raven = require('raven')
+const sentry = require('./sentry')
 
 const GoogleTTS = require('lib/GoogleTTS')
 const ChatHandler = require('lib/handlers/ChatHandler')
@@ -23,8 +23,6 @@ var client
 
 var GTTS
 
-var sentry
-
 var channelMap = {}
 
 var keepRunning = true
@@ -37,10 +35,6 @@ function init () {
   client = new Discord({
     autoReconnect: true
   })
-
-  if (conf.sentry.dsn && conf.sentry.dsn !== ''){
-    sentry = new raven.Client(conf.sentry.dsn)
-  }
 
   GTTS = new GoogleTTS(conf.tts.cache)
 

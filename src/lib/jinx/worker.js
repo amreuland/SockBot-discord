@@ -112,7 +112,9 @@ class RiotWorker extends EventEmitter {
     var allowRetries = params.allowRetries || true
     return new Promise((resolve, reject) => {
       request({ uri: url, gzip: true }, (err, res, body) => {
-
+        if (err) {
+          return reject(err)
+        }
       })
     })
   }

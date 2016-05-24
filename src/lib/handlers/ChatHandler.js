@@ -12,6 +12,8 @@ const { CategoryCommand, HelpCommand } = require('lib/command/Command')
 const ChannelEventHandler = require('lib/handlers/ChannelEventHandler')
 const CmdErrs = require('lib/command/Errors')
 
+const sentry = require('sentry')
+
 // const admins = conf.admins
 const chatPrefix = conf.chat_prefix
 
@@ -116,6 +118,7 @@ class ChatHandler extends ChannelEventHandler {
         return err
       })
       .catch(err => {
+        sentry.captureError(err)
         if (err instanceof Error) return evt.message.channel.sendMessage(M.code(err.stack))
         evt.message.channel.sendMessage(M.code(err))
         // return
