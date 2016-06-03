@@ -8,9 +8,8 @@ const conf = require('config')
 
 const { Markdown: M, SplitString: splitter } = require('lib/StringUtils')
 const CommandGroup = require('lib/command/CommandGroup')
-const { CategoryCommand, HelpCommand } = require('lib/command/Command')
+const { CategoryCommand, HelpCommand, UnknownCommandError, UsageError } = require('lib/command/Command')
 const ChannelEventHandler = require('lib/handlers/ChannelEventHandler')
-const CmdErrs = require('lib/command/Errors')
 
 const sentry = require('sentry')
 
@@ -101,12 +100,12 @@ class ChatHandler extends ChannelEventHandler {
         }
         this._processReturn(evt, res)
       })
-      .catch(CmdErrs.UnknownCommandError, err => {
+      .catch(UnknownCommandError, err => {
         var stack = R.join('->', err.getChain())
         evt.message.channel.sendMessage(M.code(`SockOS: '${stack}': No Such Command`))
         return err
       })
-      .catch(CmdErrs.UsageError, err => {
+      .catch(UsageError, err => {
         var stack = R.join(' ', err.getChain())
         var params = R.join(' ', R.map(M.inline, err.getParams()))
         var errs = R.join('\n', R.map(r => `\t ${r}`, err.errs))

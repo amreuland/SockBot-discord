@@ -15,9 +15,7 @@ module.exports = {
     cache: dataDir + '/cache/tts'
   },
 
-  sentry: {
-    dsn: ''
-  },
+  sentryDSN: '',
 
   chat_prefix: ']',
 

@@ -3,9 +3,8 @@
 const Promise = require('bluebird')
 const R = require('ramda')
 const { Markdown: M } = require('lib/StringUtils')
-const { UnknownCommandError, UsageError } = require('lib/command/Errors')
 
-const { Command } = require('lib/command/Command')
+const { Command, UnknownCommandError, UsageError } = require('lib/command/Command')
 
 const MAX_HELP_PER_PAGE = 8
 

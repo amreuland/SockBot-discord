@@ -2,7 +2,7 @@
 
 const path = require('path')
 
-const srcDir = path.normalize(__dirname + '/src')
+const srcDir = path.normalize(path.join(__dirname, 'src'))
 
 require('include-path')(srcDir)
 

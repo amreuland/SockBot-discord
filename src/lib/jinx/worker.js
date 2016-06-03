@@ -17,6 +17,7 @@ const SECONDS_IN_MONTH = 2592000
 class RateLimitError extends Error {}
 class UserLimitError extends RateLimitError {}
 class ServiceLimitError extends RateLimitError {}
+class UnknownLimitError extends RateLimitError {}
 class APIUnavailableError extends Error {}
 
 class RiotWorker extends EventEmitter {
@@ -149,6 +150,8 @@ class RiotWorker extends EventEmitter {
               return reject(new UserLimitError(retryTime))
             } else if (limitType === 'service') {
               return reject(new ServiceLimitError(retryTime))
+            } else {
+              return reject(new UnknownLimitError(retryTime))
             }
           }
         } else if (res.statusCode === 404) {

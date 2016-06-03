@@ -4,13 +4,64 @@ const Promise = require('bluebird')
 const R = require('ramda')
 const { Markdown: M } = require('lib/StringUtils')
 
+class CommandError extends Error {
+  constructor (args) {
+    args = args || ''
+    if (R.is(String, args)) args = { message: args }
+    super(args.message)
+    this.cmdChain = (args.chain ? [args.chain] : [])
+  }
+  addParent (alias) { this.cmdChain.unshift(alias) }
+  getChain () { return this.cmdChain }
+}
+
+class CommandStateError extends CommandError {}
+
+class UnknownCommandError extends CommandError {
+  constructor (args) {
+    super('Unknown Command')
+    this.cmdChain = [args]
+  }
+}
+
+class UsageError extends CommandError {
+  constructor (args) {
+    super('UsageError')
+    this.errs = (R.is(Array, args) ? args : [args])
+    this.parms = []
+    this.beenSet = false
+  }
+
+  setParams (parms) {
+    if (this.beenSet) return
+    this.parms = parms
+    this.beenSet = true
+  }
+  getParams () { return this.parms }
+}
+
+class HelpTextError extends CommandError {
+  constructor () {
+    super('HelpTextError')
+    // this.cmdChain = []
+    // this.parameters =
+    // this.description =
+  }
+}
+
 class Command {
-  constructor (opts) {
-    this._id = opts.id
-    this._aliases = opts.aliases || []
-    this._parameters = opts.parameters || []
-    this._categories = opts.categories || []
-    this._description = opts.description || ''
+  constructor ({
+    id: optsId,
+    aliases: optsAliases = [],
+    parameters: optsParameters = [],
+    categories: optsCategories = [],
+    description: optsDescription = ''
+  }) {
+    this._id = optsId
+    this._aliases = optsAliases
+    this._parameters = optsParameters
+    this._categories = optsCategories
+    this._description = optsDescription
 
     this._parent = null
     this._parentList = []
@@ -36,7 +87,7 @@ class Command {
   getParent () { return this._parent }
 
   setParent (parent) {
-    if (this._finalized) throw new Error('Cannot set parent on finalized command')
+    if (this._finalized) throw new CommandStateError('Cannot set parent on finalized command')
     this._parent = parent
   }
 
@@ -52,12 +103,12 @@ class Command {
     return R.join(' ', l)
   }
 
-  getRootGroup () { return this._parent === null ? this : this._parent.getRootParent() }
+  getRootParent () { return this._parent === null ? this : this._parent.getRootParent() }
 
   // getHelp(args){ return this._description; }
 
   finalize () {
-    if (this._finalized) throw new Error('Command already finalized')
+    if (this._finalized) throw new CommandStateError('Command already finalized')
     this._finalized = true
   }
 }
@@ -120,5 +171,10 @@ module.exports = {
   HelpCommand,
   CategoryCommand,
   TextCommand,
-  SimpleCommand
+  SimpleCommand,
+  CommandError,
+  CommandStateError,
+  UnknownCommandError,
+  UsageError,
+  HelpTextError
 }

@@ -5,10 +5,10 @@ const R = require('ramda')
 const conf = require('config')
 const moment = require('moment')
 
-const lol = require('lib/lol-js/lol')
+const lol = require('lib/jinx')
 const { Markdown: M, toTitleCase } = require('lib/StringUtils')
 const { percentage } = require('lib/MathUtils')
-const { UsageError } = require('lib/command/Errors')
+const { UsageError } = require('lib/command/Command')
 
 var opts = {
   apiKey: conf.riot.key,
