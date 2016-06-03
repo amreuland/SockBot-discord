@@ -1,7 +1,14 @@
 'use strict'
 
+const gitRev = require('git-rev')
 const conf = require('config')
 const raven = require('raven')
+
+var gitRevisionId
+
+gitRev.long(l => {
+  gitRevisionId = l
+})
 
 var client
 
@@ -62,9 +69,12 @@ class FakeRaven {
   }
 }
 
-if (conf.sentry.dsn && conf.sentry.dsn !== '') {
+if (conf.sentryDSN && conf.sentryDSN !== '') {
   console.log('Sentry DSN found. Enabling raven')
-  client = new raven.Client(conf.sentry.dsn)
+  client = new raven.Client(conf.sentryDSN, {
+    release: gitRevisionId,
+    transport: new raven.transports.HTTPSTransport({rejectUnauthorized: false})
+  })
 } else {
   console.log('No Sentry DSN provided. Error logging with be terrible.')
   client = new FakeRaven()

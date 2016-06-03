@@ -8,26 +8,25 @@ const R = require('ramda')
 const conf = require('config')
 const sentry = require('./sentry')
 
-const GoogleTTS = require('lib/GoogleTTS')
+// const GoogleTTS = require('lib/GoogleTTS')
 const ChatHandler = require('lib/handlers/ChatHandler')
 const { Markdown: M } = require('lib/StringUtils')
-const { UsageError } = require('lib/command/Errors')
-const { SimpleCommand, TextCommand } = require('lib/command/Command')
+const { SimpleCommand, TextCommand, UsageError } = require('lib/command/Command')
 
 const commands = require('commands/')
 // console.log(commands)
 
-var timeoutTime = 10000
+// var timeoutTime = 10000
 
 var client
 
-var GTTS
+// var GTTS
 
-var channelMap = {}
+// var channelMap = {}
 
-var keepRunning = true
+// var keepRunning = true
 
-var announceQueue = []
+// var announceQueue = []
 
 var connected = false
 
@@ -36,7 +35,7 @@ function init () {
     autoReconnect: true
   })
 
-  GTTS = new GoogleTTS(conf.tts.cache)
+  // GTTS = new GoogleTTS(conf.tts.cache)
 
   connect()
 }
