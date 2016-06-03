@@ -14,7 +14,7 @@ const TTL_STATS_SUMMARY = 900
 const getStatsRanked = (region, summonerId) => {
   var requestParams = {
     caller: 'getStatsRanked',
-    region: region
+    region: region,
     url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/ranked`
   }
 
@@ -33,7 +33,7 @@ const getStatsRanked = (region, summonerId) => {
 const getStatsSummary = (region, summonerId) => {
   var requestParams = {
     caller: 'getStatsRanked',
-    region: region
+    region: region,
     url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/summary`
   }
 

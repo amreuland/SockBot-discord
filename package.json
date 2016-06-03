@@ -35,6 +35,7 @@
     "discordie": "^0.6.3",
     "fs-extra": "^0.30.0",
     "git-rev": "^0.2.1",
+    "git-rev-sync": "^1.6.0",
     "include-path": "^0.4.7",
     "limiter": "^1.0.5",
     "memorystream": "^0.3.1",

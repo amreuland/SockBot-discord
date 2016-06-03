@@ -1,18 +1,12 @@
 'use strict'
 
-const gitRev = require('git-rev')
+const gitRevSync = require('git-rev-sync')
 const conf = require('config')
 const raven = require('raven')
 
-var gitRevisionId
-
-gitRev.long(l => {
-  gitRevisionId = l
-})
+const gitRevisionId = gitRevSync.long()
 
 var client
-
-console.log('shitshit')
 
 class FakeRaven {
   captureMessage (message, kwargs, cb) {
@@ -24,7 +18,7 @@ class FakeRaven {
     console.log(`[SENTRY] DUMMY: ${message}`)
 
     if (cb) {
-      cb(null)
+      return cb(null)
     }
     return null
   }
@@ -39,7 +33,7 @@ class FakeRaven {
       cb = kwargs
     }
     if (cb) {
-      cb(null)
+      return cb(null)
     }
   }
 
@@ -49,7 +43,7 @@ class FakeRaven {
     }
     console.log(`[SENTRY] DUMMY: ${query}`)
     if (cb) {
-      cb(null)
+      return cb(null)
     }
     return null
   }

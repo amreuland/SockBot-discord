@@ -13,18 +13,18 @@ const genUrl = (region, platform, summonerId) => {
 const getCurrentGame = (region, summonerId) => {
   var platform = region.toUpperCase()
   if (platform !== 'KR' && platform !== 'RU') {
-    platform = platform + '1';
+    platform = platform + '1'
   }
   if (platform === 'OCE1') {
-    platform = 'OC1';
+    platform = 'OC1'
   }
   if (platform === 'EUNE1') {
-    platform = 'EUN1';
+    platform = 'EUN1'
   }
 
   var requestParams = {
     caller: 'getCurrentGame',
-    region: region
+    region: region,
     url: genUrl(region, platform, summonerId)
   }
 
@@ -34,7 +34,7 @@ const getCurrentGame = (region, summonerId) => {
     ttl: 10,
     saveIfNull: false,
     objectType: 'currentGame',
-    params: [summonerId],
+    params: [summonerId]
   }
 }
 

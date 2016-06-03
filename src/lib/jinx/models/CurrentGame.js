@@ -34,14 +34,6 @@ class CurrentGameModel extends BaseModel {
   }
 }
 
-class CurrentGameModel extends BaseModel {
-  constructor(def) {
-    super(BaseCurrentGame, def)
-  }
-}
-
-class CurrentGameModel extends BaseModel {
-  constructor(def) {
-    super(BaseCurrentGame, def)
-  }
+module.exports = {
+  CurrentGameModel
 }
