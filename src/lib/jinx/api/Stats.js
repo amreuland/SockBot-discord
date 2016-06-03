@@ -8,51 +8,38 @@ const restPoint = {
   version: '1.3'
 }
 
-const TTL_STATS_RANKED = 900
-const TTL_STATS_SUMMARY = 900
-
-const getStatsRanked = (region, summonerId) => {
-  var requestParams = {
-    caller: 'getStatsRanked',
-    region: region,
-    url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/ranked`
-  }
-
-  var cacheParams = {
-    rest: restPoint,
-    region: region,
-    ttl: TTL_STATS_RANKED,
-    saveIfNull: true,
-    objectType: 'stats',
-    params: [summonerId, 'ranked'],
-  }
-
-  // return
+const TTL_TIMES = {
+  ranked: 900,
+  summary: 900
 }
 
-const getStatsSummary = (region, summonerId) => {
-  var requestParams = {
-    caller: 'getStatsRanked',
-    region: region,
-    url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/summary`
-  }
+const getStatsType = (type) => {
+  type = type.toLowerCase()
+  var capped = type[0].toUpperCase() + type.substr(1)
+  return (region, summonerId) => {
+    var requestParams = {
+      caller: `getStats${capped}`,
+      region: region,
+      url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/${type}`
+    }
 
-  var cacheParams = {
-    rest: restPoint,
-    region: region,
-    ttl: TTL_STATS_SUMMARY,
-    saveIfNull: true,
-    objectType: 'stats',
-    params: [summonerId, 'summary'],
-  }
+    var cacheParams = {
+      rest: restPoint,
+      region: region,
+      ttl: TTL_TIMES[type],
+      saveIfNull: true,
+      objectType: 'stats',
+      params: [summonerId, type]
+    }
 
-  // return
+    // return
+  }
 }
 
 module.exports = {
   restPoint,
   methods: {
-    getStatsRanked,
-    getStatsSummary
+    getStatsRanked: getStatsType('ranked'),
+    getStatsSummary: getStatsType('summary')
   }
 }
