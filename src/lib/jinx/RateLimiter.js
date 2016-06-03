@@ -11,7 +11,7 @@ class RateLimiter extends EventEmitter {
   }
 
   wait (time) {
-    var t = tim * 1000
+    var t = time * 1000
   }
 }
 

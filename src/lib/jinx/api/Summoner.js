@@ -13,10 +13,10 @@ const restPoint = {
 const TTL_SUMMONER_BY_NAME = 259200
 const TTL_SUMMONER_BY_ID = 259200
 
-const MAX_SUMMONER_BY_NAME_REQUEST = 40;
-const MAX_SUMMONER_BY_ID_REQUEST = 40;
+const MAX_SUMMONER_BY_NAME_REQUEST = 40
+const MAX_SUMMONER_BY_ID_REQUEST = 40
 
-const standardizeIt = R.compose(R.replace(/\ /g, ''), R.toLower)
+const standardizeIt = R.compose(R.replace(/ /g, ''), R.toLower)
 
 const getSummonersByName = (region, summonerNames) => {
   var stdSummonerNames = R.map(standardizeIt, summonerNames)
@@ -24,7 +24,7 @@ const getSummonersByName = (region, summonerNames) => {
 
   var requestParams = {
     caller: 'getSummonersByName',
-    region: region
+    region: region,
     data: stdSummonerNames,
     url: `${genUrl(region, restPoint)}/by-name`,
     suffix: '',
@@ -39,7 +39,7 @@ const getSummonersByName = (region, summonerNames) => {
 const getSummonersById = (region, summonerIds) => {
   var requestParams = {
     caller: 'getSummonersById',
-    region: region
+    region: region,
     data: summonerIds,
     url: genUrl(region, restPoint),
     suffix: '',
