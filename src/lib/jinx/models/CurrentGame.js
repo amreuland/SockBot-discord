@@ -29,7 +29,7 @@ const BaseCurrentGameParticipant = {
 }
 
 class CurrentGameModel extends BaseModel {
-  constructor(def) {
+  constructor (def) {
     super(BaseCurrentGame, def)
   }
 }

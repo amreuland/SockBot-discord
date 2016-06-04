@@ -62,7 +62,7 @@ const getSummonerByDataCacheParams = R.curry((region, type, summonerNameId) => {
     ttl: TTL_SUMMONER_BY_NAME,
     saveIfNull: true,
     objectType: type,
-    params: [summonerNameId],
+    params: [summonerNameId]
   }
 })
 
