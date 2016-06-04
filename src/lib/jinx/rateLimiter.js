@@ -1,35 +1,37 @@
 'use strict'
 
 const Promise = require('bluebird')
-// const RateLimit = require('ratelimit.js').RateLimit
+const Limit = require('limiter').RateLimiter
+const R = require('ramda')
 
-// redis.createClient('redis://ws-master.local')
 class RateLimiter {
-  constructor (cache, limits = [
+  constructor (rules = [
     {interval: 10, limit: 10},
-    {interval: 600, limit: 500}], prefix = 'lolRate') {
-    if (!cache || cache === null) {
-      throw new Error('RateLimiter requires a redis cache argument')
+    {interval: 600, limit: 500}]) {
+    this._rules = rules
+    this._limiters = []
+
+    for (let i = 0, len = rules.length; i < len; i++) {
+      this._limitiers.push(new Limit(
+        rules[i].interval,
+        rules[i].limit * 1000
+      ))
     }
-
-    this._redisClient = cache
-    this._limits = limits
-    this._prefix = prefix
-
-    var limiter = new RateLimit(cache, limits, {prefix: prefix})
-    limiter.whitelist(['global'])
-
-    this._limiter = limiter
   }
 
-  incur (region) {
-    return new Promise((resolve, reject) => {
-      this._limiter.incur(region, (err, res) => {
-
+  wait () {
+    return Promise.all(R.map(l => new Promise((resolve, reject) => {
+      l.removeTokens(1, (err, res) => {
+        if (err) reject(err)
+        else resolve(res)
       })
-    })
+    })))
+    .then(R.reduce(R.min, Infinity))
   }
 
+  // hitLimit (time) {
+  //   return Promise.delay(time * 100)
+  // }
 }
 
 module.exports = RateLimiter
