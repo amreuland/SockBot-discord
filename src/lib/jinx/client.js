@@ -140,12 +140,18 @@ class Jinx {
         .then(reqRes => {
           if (reqRes !== null || (reqRes === null && cacheParams.saveIfNull === true)) {
             return this._cache.set(cacheKey, reqRes, cacheParams.ttl || 120)
+            .return(reqRes)
           }
+          return reqRes
         })
       } else {
         return cacheRes
       }
     })
+  }
+
+  _makeMultiRequest (params) {
+
   }
 }
 

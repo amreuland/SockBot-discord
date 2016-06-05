@@ -90,6 +90,10 @@ class RequestWorker {
 
     this._stats.highWaterMark = R.max(this._workQueue.length, this._stats.highWaterMark)
 
+    if (this._stats.higWaterMark >= 40) {
+      console.log(`[Jinx] Holy Crap! Over 40 requests for data in the '${this._region}' queue`)
+    }
+
     return this._limiter.wait()
     .then(x => this._workQueue.shift())
     .then(req => this._doWork(req).then(req.resolve, req.reject))
