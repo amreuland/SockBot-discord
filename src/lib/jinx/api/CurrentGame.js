@@ -22,20 +22,16 @@ const getCurrentGame = (region, summonerId) => {
     platform = 'EUN1'
   }
 
-  var requestParams = {,
+  var requestParams = {
     rest: restPoint,
     caller: 'getCurrentGame',
     region: region,
-    url: genUrl(region, platform, summonerId)
-  }
-
-  var cacheParams = {
-    rest: restPoint,
-    region: region,
-    ttl: 10,
-    saveIfNull: false,
-    objectType: 'currentGame',
-    params: [summonerId]
+    url: genUrl(region, platform, summonerId),
+    cache: {
+      ttl: 10,
+      key: `currentGame-${summonerId}`,
+      saveIfNull: false
+    }
   }
 }
 
