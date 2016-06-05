@@ -10,7 +10,19 @@ const RateLimiter = require('./rateLimiter')
 const MAX_RETRIES = 5
 const TIME_WAIT_RIOT_API_MS = 100
 
+class RetryLimitError extends Error {
+  constructor (msg) {
+    super(`${msg}\nMax retries hit while trying to request data`)
+  }
+}
+class BadRequestError extends Error {}
+class UnauthorizedError extends Error {}
 class RequestError extends Error {}
+class APIUnavailableError extends RequestError {
+  constructor () {
+    super('Riot API is currently unavailable')
+  }
+}
 class RateLimitError extends RequestError {
   constructor (time) {
     super('Rate Limit Hit. Slow your Roll')
@@ -20,19 +32,7 @@ class RateLimitError extends RequestError {
 class UserLimitError extends RateLimitError {}
 class ServiceLimitError extends RateLimitError {}
 class UnknownLimitError extends RateLimitError {}
-class APIUnavailableError extends RequestError {
-  constructor () {
-    super('Riot API is currently unavailable')
-  }
-}
-class NotFoundError extends RequestError {}
-class RetryLimitError extends Error {
-  constructor (msg) {
-    super(`${msg}\nMax retries hit while trying to request data`)
-  }
-}
-class BadRequestError extends Error {}
-class UnauthorizedError extends Error {}
+// class NotFoundError extends RequestError {}
 
 class RequestWorker {
   constructor ({
@@ -47,9 +47,12 @@ class RequestWorker {
     this._outstandingRequests = {}
     this._region = optsRegion
     this._stats = {
-      rateLimitErrors: 0,
-      queueHighWaterMark: 0,
-      riotApiUnavailable: 0
+      errors: 0,
+      apiErrors: 0,
+      rateErrors: 0,
+      workerErrors: 0,
+      requestErrors: 0,
+      highWaterMark: 0
     }
   }
 
@@ -85,16 +88,21 @@ class RequestWorker {
       return
     }
 
+    this._stats.highWaterMark = R.max(this._workQueue.length, this._stats.highWaterMark)
+
     return this._limiter.wait()
     .then(x => this._workQueue.shift())
     .then(req => this._doWork(req).then(req.resolve, req.reject))
     .catch(err => {
-      console.error(`[Jinx] Error in work thread\n${err.message}`)
+      this._stats.errors++
+      this._stats.workerErrors++
+      console.error(`[Jinx] Error in '${this._region}' work thread\n${err.message}`)
       sentry.captureException(err, {
         extra: {
           region: this._region,
           stats: this._stats
-        }
+        },
+        tags: { lib: 'jinx' }
       })
       return true
     })
@@ -107,35 +115,40 @@ class RequestWorker {
       p.catch(RequestError, err => Promise.reject(new RetryLimitError(err.message)))
     }
     return p.catch(UserLimitError, ServiceLimitError, err => {
-      this._stats.rateLimitErrors++
+      this._stats.errors++
+      this._stats.rateErrors++
 
       return Promise.delay(err.watTime * 1000)
       .then(x => this._doWork(req))
     })
     .catch(APIUnavailableError, () => {
-      this._stats.riotApiUnavailable++
+      this._stats.errors++
+      this._stats.apiErrors++
 
       return Promise.delay(TIME_WAIT_RIOT_API_MS)
       .then(x => this._doWork(req))
     })
-    .catch(NotFoundError, () => null)
+    // .catch(NotFoundError, () => null)
   }
 
   _doRequest (url) {
     return new Promise((resolve, reject) => {
       request({ uri: url, gzip: true }, (err, res, body) => {
         if (err) {
+          this._stats.requestErrors++
           return reject(err)
         }
 
         switch (res.statusCode) {
           case 400:
-            return reject(new BadRequestError())
+            return reject(new BadRequestError(body))
 
           case 401:
+          case 403:
             return reject(new UnauthorizedError())
 
-          // case 404:
+          case 404:
+            return resolve(null)
             // return reject(new NotFoundError())
 
           case 429:
@@ -165,4 +178,10 @@ class RequestWorker {
   }
 }
 
-module.exports = RequestWorker
+module.exports = {
+  RequestWorker,
+  RetryLimitError,
+  BadRequestError,
+  UnauthorizedError,
+  RequestError
+}
