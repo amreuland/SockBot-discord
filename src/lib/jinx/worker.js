@@ -3,16 +3,12 @@
 const Promise = require('bluebird')
 const R = require('ramda')
 const request = require('request')
-const { EventEmitter } = require('events')
+
 const sentry = require('../../sentry')
+const RateLimiter = require('./rateLimiter')
 
-const RateLimiter = require('./rateLimiters')
-const constants = require('./constants')
-
-// const MAX_RETRIES_RIOT_API_UNAVAILABLE = 10
 const MAX_RETRIES = 5
 const TIME_WAIT_RIOT_API_MS = 100
-const SECONDS_IN_MONTH = 2592000
 
 class RequestError extends Error {}
 class RateLimitError extends RequestError {
@@ -29,116 +25,49 @@ class APIUnavailableError extends RequestError {
     super('Riot API is currently unavailable')
   }
 }
-class RetryLimitError extends Error {}
+class NotFoundError extends RequestError {}
+class RetryLimitError extends Error {
+  constructor (msg) {
+    super(`${msg}\nMax retries hit while trying to request data`)
+  }
+}
+class BadRequestError extends Error {}
+class UnauthorizedError extends Error {}
 
-class RiotWorker extends EventEmitter {
+class RequestWorker {
   constructor ({
-    apiKey: optsApiKey = null,
+    region: optsRegion = 'na',
     rateLimits: optsRateLimit = [
-      { time: 10, limit: 10 },
-      { time: 600, limit: 500 }],
-    cache: optsCache = null,
-    region: optsRegion = 'na'
+      { interval: 10, limit: 10 },
+      { interval: 600, limit: 500 }]
   }) {
-    super()
-
-    if (optsApiKey === null) {
-      throw new Error('\'apiKey\' is a required argument')
-    }
-
     this._limiter = new RateLimiter(optsRateLimit)
     this._workQueue = []
     this._working = false
     this._outstandingRequests = {}
     this._region = optsRegion
     this._stats = {
-      hits: 0,
-      misses: 0,
-      errors: 0,
       rateLimitErrors: 0,
       queueHighWaterMark: 0,
       riotApiUnavailable: 0
     }
-
-    if (optsCache !== null) {
-      this._cache = {
-        get: params => {
-          return new Promise((resolve, reject) => {
-            optsCache.get(params, (err, res) => {
-              if (err) {
-                this._stats.errors++
-                this.emit('cacheGetError', err)
-
-                return reject(err)
-              }
-
-              if (res === null) {
-                this._stats.misses++
-              } else {
-                this._stats.hits++
-                if (res.cacheTime !== null) {
-                  return resolve(res)
-                } else {
-                  if (res === 'none') {
-                    res = null
-                  }
-
-                  return resolve({
-                    value: res,
-                    cacheTime: 0,
-                    ttl: 0
-                  })
-                }
-              }
-
-              return reject(new Error('Some error occured'))
-            })
-          })
-        },
-        set: (params, value) => {
-          return new Promise((resolve, reject) => {
-            var cacheTime = Date.now()
-            var ttl = params.ttl !== null ? params.ttl : 120
-            var cacheValue = {
-              value: value,
-              cacheTime: cacheTime,
-              ttl: ttl
-            }
-            if (params.ttl === null) {
-              params.ttl = ttl
-            }
-            optsCache.set(params, cacheValue, (err, res) => {
-              if (err) {
-                this._stats.errors++
-                this.emit('cacheSetError', err)
-                return reject(err)
-              }
-              return resolve(res)
-            })
-          })
-        },
-        destroy: () => {
-          if (typeof optsCache.destory === 'function') {
-            return optsCache.destroy()
-          } else {
-            return 0
-          }
-        }
-      }
-    } else {
-      this._cache = {
-        get: params => Promise.resolve(null),
-        set: (params, value) => Promise.resolve(null),
-        destroy: () => Promise.resolve(null)
-      }
-      console.log('[Jinx] No caching.... You do live dangerously')
-    }
   }
-
-  destroy () { return this._cache.destroy() }
 
   getStats () {
     return R.clone(this._stats)
+  }
+
+  makeRequest (url) {
+    return new Promise((resolve, reject) => {
+      var req = {
+        retries: 0,
+        resolve: resolve,
+        reject: reject,
+        url: url
+      }
+      this._workQueue.push(req)
+      this._startWorkThread()
+    })
   }
 
   _startWorkThread () {
@@ -147,7 +76,7 @@ class RiotWorker extends EventEmitter {
     }
 
     this._working = true
-    return setImmediate(this._workThread)
+    return setImmediate(() => this._workThread())
   }
 
   _workThread () {
@@ -157,26 +86,25 @@ class RiotWorker extends EventEmitter {
     }
 
     return this._limiter.wait()
-    .tap(x => setImmediate(this._workThread))
     .then(x => this._workQueue.shift())
-    .then(req => this._doWork(req))
+    .then(req => this._doWork(req).then(req.resolve, req.reject))
     .catch(err => {
-      console.error(`[Jinx] Error in work thread\n${err.stack}`)
+      console.error(`[Jinx] Error in work thread\n${err.message}`)
       sentry.captureException(err, {
         extra: {
           region: this._region,
           stats: this._stats
         }
       })
+      return true
     })
+    .then(() => setImmediate(() => this._workThread()))
   }
 
   _doWork (req) {
     var p = this._doRequest(req.url)
     if (++req.retries > MAX_RETRIES) {
-      p.catch(RequestError, err => {
-        return Promise.reject(new RetryLimitError(`${err.message}\nMax retries hit while trying to request data`))
-      })
+      p.catch(RequestError, err => Promise.reject(new RetryLimitError(err.message)))
     }
     return p.catch(UserLimitError, ServiceLimitError, err => {
       this._stats.rateLimitErrors++
@@ -190,14 +118,7 @@ class RiotWorker extends EventEmitter {
       return Promise.delay(TIME_WAIT_RIOT_API_MS)
       .then(x => this._doWork(req))
     })
-    .then(data => {
-      if (data !== null) {
-        return JSON.parse(data)
-      } else {
-        return null
-      }
-    })
-    .then(req.resolve, req.reject)
+    .catch(NotFoundError, () => null)
   }
 
   _doRequest (url) {
@@ -207,30 +128,41 @@ class RiotWorker extends EventEmitter {
           return reject(err)
         }
 
-        if (res.statusCode === 429) {
-          var {
-            'retry-after': retryTime,
-            'x-rate-limit-type': limitType
-          } = res.headers
+        switch (res.statusCode) {
+          case 400:
+            return reject(new BadRequestError())
 
-          if (retryTime && limitType) {
-            if (limitType === 'user') {
-              return reject(new UserLimitError(retryTime))
-            } else if (limitType === 'service') {
-              return reject(new ServiceLimitError(retryTime))
-            } else {
-              return reject(new UnknownLimitError(retryTime))
+          case 401:
+            return reject(new UnauthorizedError())
+
+          // case 404:
+            // return reject(new NotFoundError())
+
+          case 429:
+            var {
+              'retry-after': retryTime,
+              'x-rate-limit-type': limitType
+            } = res.headers
+
+            if (retryTime && limitType) {
+              if (limitType === 'user') {
+                return reject(new UserLimitError(retryTime))
+              } else if (limitType === 'service') {
+                return reject(new ServiceLimitError(retryTime))
+              }
             }
-          }
-        } else if (res.statusCode === 404) {
-          return resolve(null)
-        } else if (res.statusCode === 503) {
-          return Promise.reject(new APIUnavailableError())
+            return reject(new UnknownLimitError(retryTime))
+
+          case 500:
+          case 503:
+            return reject(new APIUnavailableError())
+
+          default:
+            return resolve(body)
         }
-        return resolve(body)
       })
     })
   }
 }
 
-module.exports = RiotWorker
+module.exports = RequestWorker

@@ -12,9 +12,9 @@ class RateLimiter {
     this._limiters = []
 
     for (let i = 0, len = rules.length; i < len; i++) {
-      this._limitiers.push(new Limit(
-        rules[i].interval,
-        rules[i].limit * 1000
+      this._limiters.push(new Limit(
+        rules[i].limit,
+        rules[i].interval * 1000
       ))
     }
   }
@@ -22,10 +22,13 @@ class RateLimiter {
   wait () {
     return Promise.all(R.map(l => new Promise((resolve, reject) => {
       l.removeTokens(1, (err, res) => {
-        if (err) reject(err)
-        else resolve(res)
+        if (err) {
+          return reject(err)
+        } else {
+          return resolve(res)
+        }
       })
-    })))
+    }), this._limiters))
     .then(R.reduce(R.min, Infinity))
   }
 
