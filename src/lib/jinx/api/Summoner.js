@@ -10,8 +10,10 @@ const restPoint = {
   version: '1.4'
 }
 
-const TTL_SUMMONER_BY_NAME = 259200
-const TTL_SUMMONER_BY_ID = 259200
+const TTL_TIMES = {
+  'summonerName': 259200,
+  'summonerId': 259200
+}
 
 const MAX_SUMMONER_BY_NAME_REQUEST = 40
 const MAX_SUMMONER_BY_ID_REQUEST = 40
@@ -23,30 +25,30 @@ const getSummonersByName = (region, summonerNames) => {
   var stdReqNameMap = R.zipObj(stdSummonerNames, summonerNames)
 
   var requestParams = {
+    rest: restPoint,
     caller: 'getSummonersByName',
     region: region,
     data: stdSummonerNames,
     url: `${genUrl(region, restPoint)}/by-name`,
     suffix: '',
-    maxObjs: MAX_SUMMONER_BY_NAME_REQUEST
+    maxObjs: MAX_SUMMONER_BY_NAME_REQUEST,
+    cache: getSummonerByDataCacheParams(region, 'summonerName')
   }
-
-  var cacheParams = getSummonerByDataCacheParams(region, 'summoner-name')
 
   // return
 }
 
 const getSummonersById = (region, summonerIds) => {
   var requestParams = {
+    rest: restPoint,
     caller: 'getSummonersById',
     region: region,
     data: summonerIds,
     url: genUrl(region, restPoint),
     suffix: '',
-    maxObjs: MAX_SUMMONER_BY_ID_REQUEST
+    maxObjs: MAX_SUMMONER_BY_ID_REQUEST,
+    cacheFn: getSummonerByDataCacheParams(region, 'summonerId')
   }
-
-  var cacheParams = getSummonerByDataCacheParams(region, 'summoner-id')
 
   // return
 }
@@ -57,12 +59,9 @@ const getSummonerNames = (region, summonerIds) => {
 
 const getSummonerByDataCacheParams = R.curry((region, type, summonerNameId) => {
   return {
-    rest: restPoint,
-    region: region,
-    ttl: TTL_SUMMONER_BY_NAME,
-    saveIfNull: true,
-    objectType: type,
-    params: [summonerNameId]
+    ttl: TTL_TIMES[type],
+    key: `${type}-${summonerNameId}`,
+    saveIfNull: true
   }
 })
 

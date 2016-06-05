@@ -13,25 +13,21 @@ const TTL_TIMES = {
   summary: 900
 }
 
-const getStatsType = (type) => {
+const getStatsType = type => {
   type = type.toLowerCase()
   var capped = type[0].toUpperCase() + type.substr(1)
   return (region, summonerId) => {
     var requestParams = {
+      rest: restPoint,
       caller: `getStats${capped}`,
       region: region,
-      url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/${type}`
+      url: `${genUrl(region, restPoint)}/by-summoner/${summonerId}/${type}`,
+      cache: {
+        ttl: TTL_TIMES[type],
+        key: `stats-${summonerId}-${type}`,
+        saveIfNull: true
+      }
     }
-
-    var cacheParams = {
-      rest: restPoint,
-      region: region,
-      ttl: TTL_TIMES[type],
-      saveIfNull: true,
-      objectType: 'stats',
-      params: [summonerId, type]
-    }
-
     // return
   }
 }

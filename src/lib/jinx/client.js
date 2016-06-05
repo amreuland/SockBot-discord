@@ -31,8 +31,8 @@ class Jinx {
       hits: 0,
       misses: 0,
       errors: 0,
-      workerErrors: 0,
-      cacheErrors: 0
+      cacheErrors: 0,
+      workerErrors: 0
     }
 
     this._reqWorkers = R.compose(R.fromPairs, R.map(region => {
@@ -132,7 +132,7 @@ class Jinx {
 
   _makeCachedRequest (params) {
     var cacheParams = params.cache
-    var cacheKey = `jinx-${params.region}-${cacheParams.key}`
+    var cacheKey = `jinx-${params.region}-${params.rest.fullName}-${cacheParams.key}`
     this._cache.get(cacheKey)
     .then(cacheRes => {
       if (cacheRes === null) {
