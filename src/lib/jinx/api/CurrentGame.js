@@ -22,7 +22,8 @@ const getCurrentGame = (region, summonerId) => {
     platform = 'EUN1'
   }
 
-  var requestParams = {
+  var requestParams = {,
+    rest: restPoint,
     caller: 'getCurrentGame',
     region: region,
     url: genUrl(region, platform, summonerId)
