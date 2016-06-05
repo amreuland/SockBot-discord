@@ -182,6 +182,5 @@ module.exports = {
   RequestWorker,
   RetryLimitError,
   BadRequestError,
-  UnauthorizedError,
-  RequestError
+  UnauthorizedError
 }
