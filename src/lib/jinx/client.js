@@ -1,7 +1,6 @@
 'use strict'
 
 const Promise = require('bluebird')
-const { EventEmitter } = require('events')
 const R = require('ramda')
 
 const sentry = require('../../sentry')
@@ -9,13 +8,12 @@ const constants = require('./constants')
 const {
   RequestWorker,
   BadRequestError,
-  UnauthorizedError,
-  RequestError
+  UnauthorizedError
 } = require('./worker')
 
 const getStringMaker = R.compose(R.join('&'), R.map(R.join('=')), R.toPairs)
 
-class Jinx extends EventEmitter {
+class Jinx {
   constructor ({
     apiKey: optsApiKey = null,
     cache: optsCache = null,
@@ -23,8 +21,6 @@ class Jinx extends EventEmitter {
       { interval: 10, limit: 10 },
       { interval: 600, limit: 500 }]
   }) {
-    super()
-
     if (optsApiKey === null) {
       throw new Error('\'apiKey\' is a required argument')
     }
@@ -53,10 +49,8 @@ class Jinx extends EventEmitter {
             if (err) {
               this._stats.errors++
               this._stats.cacheErrors++
-              this.emit('cacheGetError', err)
               return reject(err)
             }
-
             return resolve(res)
           })
         }),
@@ -67,22 +61,24 @@ class Jinx extends EventEmitter {
             if (err) {
               this._stats.errors++
               this._stats.cacheErrors++
-              this.emit('cacheSetError', err)
               return reject(err)
             }
-
             optsCache.expire(key, ttl)
             return resolve(res)
           })
         }),
 
-        destroy: () => {
-          if (typeof optsCache.destory === 'function') {
-            return optsCache.quit()
-          } else {
-            return 0
+        destroy: () => new Promise((resolve, reject) => {
+          var res = 0
+          try {
+            if (typeof optsCache.destory === 'function') {
+              res = optsCache.quit()
+            }
+          } catch (err) {
+            return reject(err)
           }
-        }
+          return resolve(res)
+        })
       }
     } else {
       this._cache = {
@@ -113,9 +109,13 @@ class Jinx extends EventEmitter {
 
     return worker.makeRequest(`${url}&api_key=${this._key}`)
     .then(JSON.parse)
-    .catch(BadRequestError, RequestError, err => {
+    .catch(BadRequestError, UnauthorizedError, err => {
       this._stats.errors++
-      this._stats.workerErrors++
+
+      if (err instanceof BadRequestError) {
+        this._stats.workerErrors++
+      }
+
       sentry.captureException(err, {
         extra: {
           region, url, queryParams,
@@ -126,18 +126,6 @@ class Jinx extends EventEmitter {
         },
         tags: { lib: 'jinx' },
         level: 'warning'
-      })
-    })
-    .catch(UnauthorizedError, err => {
-      this._stats.errors++
-      sentry.captureException(err, {
-        extra: {
-          region, url, queryParams,
-          clientStats: this._stats,
-          apiMethod: params.caller,
-          restEndpoint: params.rest,
-          hasApiKey: this._key !== null
-        }
       })
     })
   }
