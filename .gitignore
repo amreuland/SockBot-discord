@@ -1,6 +1,8 @@
 node_modules
 config.js
 data/
+npm-debug.log
+
 
 
 config/default.js
