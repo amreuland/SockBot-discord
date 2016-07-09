@@ -20,6 +20,8 @@ const commands = require('commands/')
 
 var client
 
+var chatHandler
+
 // var GTTS
 
 // var channelMap = {}
@@ -36,7 +38,7 @@ function init () {
   })
 
   // GTTS = new GoogleTTS(conf.tts.cache)
-
+  chatHandler.registerHandler(client)
   connect()
 }
 
@@ -82,7 +84,7 @@ function handleDisconnection (evt) {
 // setTimeout(connect, time)
 }
 
-var chatHandler = new ChatHandler(client)
+chatHandler = new ChatHandler(client)
 
 // var queueMessage = function (channel, guild, tchannel, message) {
 //   announceQueue.push({
@@ -93,7 +95,6 @@ var chatHandler = new ChatHandler(client)
 //   })
 // }
 
-chatHandler.registerHandler()
 R.forEach(cmd => chatHandler.registerCommand(cmd), commands)
 
 chatHandler.registerCommand(new TextCommand({
@@ -217,7 +218,7 @@ chatHandler.registerCommand(new SimpleCommand({
       .forEach(channel => channel.leave())
     return Promise.resolve('Good Bye').then(res => {
       handler.getClient().disconnect()
-      keepRunning = false
+      // keepRunning = false
       return res
     })
   },

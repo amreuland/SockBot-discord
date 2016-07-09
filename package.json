@@ -30,9 +30,10 @@
     "Bot"
   ],
   "dependencies": {
+    "ashe": "latest",
     "bluebird": "^3.4.0",
     "config": "^1.20.3",
-    "discordie": "^0.6.3",
+    "discordie": "latest",
     "fs-extra": "^0.30.0",
     "git-rev": "^0.2.1",
     "git-rev-sync": "^1.6.0",

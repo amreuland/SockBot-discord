@@ -18,8 +18,8 @@ const chatPrefix = conf.chat_prefix
 
 class ChatHandler extends ChannelEventHandler {
 
-  constructor (client) {
-    super(client)
+  constructor () {
+    super()
 
     this.commands = {}
     this.prefixes = []
@@ -30,7 +30,8 @@ class ChatHandler extends ChannelEventHandler {
     this.handler.registerCommand(new HelpCommand())
   }
 
-  registerHandler () {
+  registerHandler (client) {
+    super.registerHandler(client)
     // console.log(this);
     // var self = this;
     // this.cmdHandler = e => this._handleChat(e);

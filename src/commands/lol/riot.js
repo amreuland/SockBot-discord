@@ -5,7 +5,8 @@ const R = require('ramda')
 const conf = require('config')
 const moment = require('moment')
 
-const lol = require('lib/jinx')
+const Ashe = require('ashe')
+const redis = require('redis')
 const { Markdown: M, toTitleCase } = require('lib/StringUtils')
 const { percentage } = require('lib/MathUtils')
 const { UsageError } = require('lib/command/Command')
@@ -16,15 +17,15 @@ var opts = {
   cache: null
 }
 
-if (conf.caching.enabled) {
-  opts.cache = lol.redisCache({
-    host: conf.caching.host,
-    port: conf.caching.port,
-    keyPrefix: 'loljs'
+if (conf.cache.enabled) {
+  opts.cache = redis.createClient({
+    host: conf.cache.host,
+    port: conf.cache.post,
+    db: conf.cache.db
   })
 }
 
-var lolClient = lol.client(opts)
+var lolClient = new Ashe(opts)
 
 class InvalidRegionError extends Error {}
 class NotInGameError extends Error {}
@@ -34,13 +35,13 @@ class UserNotFound extends Error {}
 const _validateRegion = (region) => {
   return Promise.resolve(region).then(r => {
     if (R.is(Object, r)) r = r.region
-    if (R.contains(R.toLower(r), R.keys(lol.constants.regions))) return R.toLower(r)
+    if (R.contains(R.toLower(r), R.keys(Ashe.REGIONS))) return R.toLower(r)
     throw new InvalidRegionError(r)
   })
 }
 
 const _getMatchDataCurry = R.curry((region, name, summonerId) => {
-  return lolClient.getCurrentGame(region, [summonerId])
+  return lolClient.getCurrentGame(region, summonerId)
   .tap(data => {
     if (!data || data === null) return Promise.reject(new NotInGameError(name))
   })
@@ -70,7 +71,7 @@ const _getPlayerRanksCurry = R.curry((region, summoners) => {
 })
 
 const _getChampStatsCurry = R.curry((region, summoner) => {
-  return lolClient.getRankedStats(region, summoner.summonerId)
+  return lolClient.getStatsRanked(region, summoner.summonerId)
   .then(d => (d === null ? [] : d['champions']))
   .then(champs => R.zipObj(R.pluck('id', champs), R.pluck('stats', champs)))
   .then(stats => {
@@ -149,7 +150,7 @@ const matchDetails = (handler, evt, args) => {
   .then(data => {
     const blueSideText = `${M.underline('Blue Side')}:\n${_sideStrings(100, data)}`
     const redSideText = `${M.underline('Red Side')}:\n${_sideStrings(200, data)}`
-    const gameText = `Playing ${M.bold(lol.constants.modes[matchData.gameMode])} on ${M.bold(lol.constants.maps[matchData.mapId].name)}`
+    const gameText = `Playing ${M.bold(Ashe.GAMEMODES[matchData.gameMode])} on ${M.bold(Ashe.MAPS[matchData.mapId].name)}`
     const timeText = `Started at ${M.underline(moment(matchData.gameStartTime).format('HH:mm__ [on] __MM/DD/YY'))}`
     const lengthText = `Current Length: ${moment.unix(matchData.gameLength).utc().format('HH:mm:ss')}`
     const headerText = `${gameText}\n\n${matchData.gameStartTime > 0 ? timeText : 'Has Not Started Yet'}  |  ${lengthText}`

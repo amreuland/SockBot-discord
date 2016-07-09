@@ -1,7 +1,11 @@
 'use strict'
 
 class EventHandler {
-  constructor (client) {
+  // constructor (client) {
+  //   this.client = client
+  // }
+
+  registerHandler (client) {
     this.client = client
   }
 
