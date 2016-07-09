@@ -63,9 +63,9 @@ class FakeRaven {
   }
 }
 
-if (conf.sentryDSN && conf.sentryDSN !== '') {
+if (conf.sentry.dsn && conf.sentry.dsn !== '') {
   console.log('Sentry DSN found. Enabling raven')
-  client = new raven.Client(conf.sentryDSN, {
+  client = new raven.Client(conf.sentry.dsn, {
     release: gitRevisionId,
     transport: new raven.transports.HTTPSTransport({rejectUnauthorized: false})
   })
