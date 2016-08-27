@@ -155,7 +155,7 @@ const matchDetails = (handler, evt, args) => {
     const lengthText = `Current Length: ${moment.unix(matchData.gameLength).utc().format('HH:mm:ss')}`
     const headerText = `${gameText}\n\n${matchData.gameStartTime > 0 ? timeText : 'Has Not Started Yet'}  |  ${lengthText}`
     const summonerTeam = R.find(R.propEq('summonerId', summonerId), data).teamId === 100 ? 'Blue' : 'Red'
-    const titleText = `Found Potato: ${M.bold(summoner)} on the ${M.underline(summonerTeam)} side.`
+    const titleText = `Found Summoner: ${M.bold(summoner)} on the ${M.underline(summonerTeam)} side`
 
     return R.join('\n\n', [titleText, headerText, _titleMessage, blueSideText, redSideText])
   })
