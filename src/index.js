@@ -55,7 +55,9 @@ function connect () {
 function handleConnection (evt) {
   console.log(`Connected as: ${client.User.username}`)
 
-  client.User.setStatus('online', {name: 'Half-Life 3'})
+  client.User.setStatus('online', {
+    name: 'Half-Life 3'
+  })
 
   // var vchannel =
   // client.Channels

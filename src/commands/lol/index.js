@@ -10,7 +10,7 @@
 // const conf = require('config')
 // const R = require('ramda')
 
-const { SimpleCommand } = require('lib/command/Command')
+const { SimpleCommand, HelpCommand } = require('lib/command/Command')
 const CommandGroup = require('lib/command/CommandGroup')
 
 // const { Markdown: M } = require('lib/StringUtils')

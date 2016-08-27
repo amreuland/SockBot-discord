@@ -33,7 +33,7 @@ class ChatHandler extends ChannelEventHandler {
   registerHandler (client) {
     super.registerHandler(client)
     // console.log(this);
-    // var self = this;
+    // let self = this;
     // this.cmdHandler = e => this._handleChat(e);
     this.client.Dispatcher.on(Discord.Events.MESSAGE_CREATE, e => this._handleChat(e))
   }
@@ -78,7 +78,7 @@ class ChatHandler extends ChannelEventHandler {
     if (this.client.User.id === evt.message.author.id) return
 
     // if(!admins[evt.message.author.id]) return;
-    var content
+    let content
     console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}] ${evt.message.author.username}: ${evt.message.content}`)
     if (evt.message.content.indexOf(chatPrefix) === 0) {
       content = evt.message.content.substring(chatPrefix.length)
@@ -89,9 +89,9 @@ class ChatHandler extends ChannelEventHandler {
       return
     }
 
-    var args = splitter(content)
+    let args = splitter(content)
 
-    var ret = this.handler.run(this, evt, args)
+    let ret = this.handler.run(this, evt, args)
 
     if (ret instanceof Promise) {
       ret.then(res => {
@@ -102,14 +102,14 @@ class ChatHandler extends ChannelEventHandler {
         this._processReturn(evt, res)
       })
       .catch(UnknownCommandError, err => {
-        var stack = R.join('->', err.getChain())
+        let stack = R.join('->', err.getChain())
         evt.message.channel.sendMessage(M.code(`SockOS: '${stack}': No Such Command`))
         return err
       })
       .catch(UsageError, err => {
-        var stack = R.join(' ', err.getChain())
-        var params = R.join(' ', R.map(M.inline, err.getParams()))
-        var errs = R.join('\n', R.map(r => `\t ${r}`, err.errs))
+        let stack = R.join(' ', err.getChain())
+        let params = R.join(' ', R.map(M.inline, err.getParams()))
+        let errs = R.join('\n', R.map(r => `\t ${r}`, err.errs))
 
         evt.message.channel.sendMessage(`Usage:  ${
           M.inline(chatPrefix)

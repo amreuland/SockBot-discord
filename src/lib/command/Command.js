@@ -68,10 +68,19 @@ class Command {
     this._finalized = false
     this._id = R.toLower(this._id)
 
-    if (R.is(String, this._aliases)) this._aliases = [this._aliases]
+    if (R.is(String, this._aliases)) {
+      this._aliases = [this._aliases]
+    }
+
     this._aliases = R.map(R.toLower, this._aliases)
-    if (!R.contains(this._id, this._aliases)) this._aliases.push(this._id)
-    if (R.is(String, this._parameters)) this._parameters = [this._parameters]
+    
+    if (!R.contains(this._id, this._aliases)) {
+      this._aliases.push(this._id)
+    }
+
+    if (R.is(String, this._parameters)) {
+      this._parameters = [this._parameters]
+    }
   }
 
   run (handler, evt, args) {
@@ -92,8 +101,8 @@ class Command {
   }
 
   getParentPath () {
-    var l = [this.getId()]
-    var p = this
+    let l = [this.getId()]
+    let p = this
 
     while (p.getParent() !== null) {
       p = p.getParent()
@@ -124,8 +133,8 @@ class CategoryCommand extends Command {
   }
 
   run (handler, evt, args) {
-    var parent = this.getParent()
-    return Promise.resolve(M.code(parent._commands))
+    let parent = this.getParent()
+    return Promise.resolve(M.code(parent.getCommands()))
   }
 }
 
@@ -140,7 +149,12 @@ class HelpCommand extends Command {
   }
 
   run (handler, evt, args) {
+    if (!isNaN(args[0])) {
+      let pageNum = parseInt(args[0])
+      return Promise.resolve(pageNum)
+    }
 
+    return Promise.resolve('a')
   }
 }
 
