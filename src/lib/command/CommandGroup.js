@@ -32,20 +32,22 @@ class CommandGroup extends Command {
     super(opts)
     this._commands = {}
     this._cmdAliasMap = {}
-    this._helpList = []
+    this._helpMap = {}
+
+//    this.registerCommand()
   }
 
   run (handler, evt, args) {
-    var alias = args.shift()
+    let alias = args.shift()
     if (!alias) return
 
     alias = R.toLower(alias)
 
-    var cmd = this._cmdAliasMap[alias]
+    let cmd = this._cmdAliasMap[alias]
     if (!cmd) return Promise.reject(new UnknownCommandError(alias))
 
-    var command = this._commands[cmd]
-    var ret = command.run(handler, evt, args)
+    let command = this._commands[cmd]
+    let ret = command.run(handler, evt, args)
 
     if (ret instanceof Promise) {
       return ret.catch(UnknownCommandError, e => {
@@ -67,7 +69,7 @@ class CommandGroup extends Command {
 
     if (!R.is(Command, cmd)) throw new TypeError('argument is not a command!')
 
-    var id = cmd._id
+    let id = cmd._id
 
     if (R.contains(id, this._commands)) throw new Error(`Command with id '${id}' already exists.`)
 
@@ -84,7 +86,7 @@ class CommandGroup extends Command {
 
   unregisterCommand (id) {
     id = R.toLower(id)
-    var aliases = this._commands[id].aliases
+    let aliases = this._commands[id].aliases
     R.forEach(alias => delete this._cmdAliasMap[alias], aliases)
 
     delete this._commands[id]
@@ -94,6 +96,8 @@ class CommandGroup extends Command {
     super.finalize()
     for (let cmd of R.values(this._commands)) cmd.finalize()
   }
+
+  getCommands () { return this._commands }
 
 }
 

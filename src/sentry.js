@@ -1,10 +1,10 @@
 'use strict'
 
-const gitRevSync = require('git-rev-sync')
+//const gitRevSync = require('git-rev-sync')
 const conf = require('config')
 const raven = require('raven')
 
-const gitRevisionId = gitRevSync.long()
+//const gitRevisionId = gitRevSync.long()
 
 var client
 
@@ -66,7 +66,7 @@ class FakeRaven {
 if (conf.sentry.dsn && conf.sentry.dsn !== '') {
   console.log('Sentry DSN found. Enabling raven')
   client = new raven.Client(conf.sentry.dsn, {
-    release: gitRevisionId,
+//    release: gitRevisionId,
     transport: new raven.transports.HTTPSTransport({rejectUnauthorized: false})
   })
 } else {
