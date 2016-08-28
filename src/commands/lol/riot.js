@@ -48,7 +48,7 @@ const _getMatchDataCurry = R.curry((region, name, summonerId) => {
 })
 
 const _getPlayerRanksCurry = R.curry((region, summoners) => {
-  const summonerData = R.zipObj(R.pluck('summonerId')(summoners), R.map(summoner => {
+  let summonerData = R.zipObj(R.pluck('summonerId')(summoners), R.map(summoner => {
     return {
       rank: 'Unranked',
       teamId: summoner.teamId,
@@ -58,15 +58,28 @@ const _getPlayerRanksCurry = R.curry((region, summoners) => {
     }
   }, summoners))
 
-  return lolClient.getLeaguesBySummonerId(region, R.keys(summonerData))
-  .then(R.values)
-  .map(data => data ? data[0] : {})
-  .filter(rankData => rankData.queue !== 'RANKED_TEAM_5x5' && rankData.queue !== 'RANKED_TEAM_3x3')
-  .each(rankData => {
-    if (!rankData.entries) return
-    const summonerId = rankData.participantId
-    summonerData[summonerId].rank = `${toTitleCase(R.toLower(rankData.tier))} ${rankData.entries[0].division}`
+  return lolClient.getLeagueEntriesBySummonerId(region, R.keys(summonerData))
+  // .then(R.values)
+  // .map(data => data ? data[0] : {})
+  .then(R.map(data => {
+    return data ? data[0] : {}
+  }))
+  .then(R.filter(rankData => {
+    return rankData.queue !== 'RANKED_TEAM_5x5' && rankData.queue !== 'RANKED_TEAM_3x3'
+  }))
+  .then(rankData => {
+    let summIds = R.keys(rankData)
+    R.forEach(sID => {
+      let sData = rankData[sID]
+
+      if (!sData.entries) {
+        return
+      }
+
+      summonerData[sID].rank = `${toTitleCase(R.toLower(sData.tier))} ${sData.entries[0].division}`
+    }, summIds)
   })
+  .catch(console.error)
   .return(summonerData)
 })
 
