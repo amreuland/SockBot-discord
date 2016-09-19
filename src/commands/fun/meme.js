@@ -32,7 +32,22 @@ var memes = [
   ['fuckyea', 'fuckyeah', 'fyeah', 'https://i.imgur.com/mTUTJpU.png'],
   ['upvote', 'https://i.imgur.com/UxUMIfY.gif'],
   ['delight', 'https://i.imgur.com/WS4a0QD.jpg'],
-  ['wtf', 'thefuck', 'whatthefuck', 'https://i.imgur.com/IH4fZyx.png']
+  ['wtf', 'thefuck', 'whatthefuck', 'https://i.imgur.com/IH4fZyx.png'],
+  ['stealthoptional', 'nostealth', 'whatisstealth', 'stealth?', 'https://i.imgur.com/9PboFvi.gif'],
+  ['ohgodno', 'https://i.imgur.com/MAQreoX.gif'],
+  ['feelsbad', 'https://i.imgur.com/XcWtwb6.png'],
+  ['fuckyoosa', 'meesa', 'https://i.imgur.com/4T0IwsW.gifv'],
+  ['hi', 'https://i.imgur.com/imgiP30.png'],
+  ['popcorn', 'go', 'https://i.imgur.com/keSKyPf.gifv'],
+  ['iseeit', 'https://i.imgur.com/8othL4H.gifv'],
+  ['whatdidyoudo', 'whatdyoudo', 'https://i.imgur.com/yLPfeVJ.gifv'],
+  ['inthemiddle', 'https://i.imgur.com/CFdMonB.gifv'],
+  ['spam', 'https://i.imgur.com/fVGSSvR.png'],
+  ['excellent', 'https://i.imgur.com/iigLQ0T.gif'],
+  ['yes', 'canada', 'https://i.imgur.com/NH0zEjj.gif'],
+  ['thisisfine', 'https://i.imgur.com/HeUNm7E.gifv'],
+  ['myjam', 'https://i.imgur.com/1AxGtP8.gifv'],
+  ['datboi', 'http://i1.kym-cdn.com/entries/icons/original/000/020/401/1461813522505.jpg']
 ]
 
 var ex = []

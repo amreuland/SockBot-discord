@@ -58,7 +58,7 @@ class ChatHandler extends ChannelEventHandler {
 
   _processReturn (evt, obj) {
     if (R.is(String, obj) || R.is(Number, obj)) {
-      evt.message.channel.sendTyping()
+      //evt.message.channel.sendTyping()
       evt.message.channel.sendMessage(obj)
       return
     }

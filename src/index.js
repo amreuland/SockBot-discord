@@ -36,6 +36,7 @@ function init () {
   client = new Discord({
     autoReconnect: true
   })
+  client.bot = true
 
   // GTTS = new GoogleTTS(conf.tts.cache)
   chatHandler.registerHandler(client)
