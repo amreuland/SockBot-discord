@@ -65,7 +65,7 @@ class Bot {
       this.logger.log('Discord is down or the credentials are wrong.')
       this.logger.log(`Trying to reconnect in ${evt.delay} milliseconds...`)
     }
-    connected = false
+    this.connected = false
   }
 }
 
