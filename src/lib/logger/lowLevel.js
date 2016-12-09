@@ -1,6 +1,6 @@
 'use strict'
 
-export default function LowLevelLogger () {
+module.exports = function LowLevelLogger () {
   let _stdout = console.log.bind(console)
   let _stderr = console.error.bind(console)
 

@@ -15,6 +15,8 @@ const ChatHandler = require('lib/handlers/ChatHandler')
 // const CommandGroup = require('lib/command/CommandGroup')
 
 const commands = require('commands/')
+
+const logger = require('lib/logger')()
 // console.log(commands)
 
 // let timeoutTime = 10000
@@ -57,12 +59,12 @@ function connect () {
   // client.Dispatcher.once(Discordie.Events.GATEWAY_READY, handleConnection)
   // client.Dispatcher.once(Discordie.Events.DISCONNECTED, handleDisconnection)
 
-  console.log('Trying to connect...')
+  logger.info('Trying to connect...')
   client.connect({token: conf.token})
 }
 
 function handleConnection (evt) {
-  console.log(`Connected as: ${client.User.username}`)
+  logger.info(`Connected as: ${client.User.username}`)
 
   client.User.setStatus('online', {
     name: 'Left 4 Dead 3'
@@ -72,7 +74,7 @@ function handleConnection (evt) {
 }
 
 function handleReconnect (evt) {
-  console.log(`Reconnected`)
+  logger.info(`Reconnected`)
 }
 
 function handleDisconnection (evt) {

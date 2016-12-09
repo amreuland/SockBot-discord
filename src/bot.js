@@ -1,11 +1,11 @@
 'use strict'
 
-import Promise from 'bluebird'
-import Discordie from 'discordie'
+const Promise = require('bluebird')
+const Discordie = require('discordie')
 
-import R from 'ramda'
+const R = require('ramda')
 
-import Logger from './logger'
+const Logger = require('./logger')
 
 const conf = require('config')
 const sentry = require('./sentry')

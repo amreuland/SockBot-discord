@@ -1,31 +1,14 @@
 'use strict'
 
-import util from 'util'
-import R from 'ramda'
-import wrap from './wrap'
-import lowLevel from './lowLevel'
-import configure from './configure'
+const wrap = require('./wrap')
+const lowLevel = require('./lowLevel')
+// const configure = require('./configure')
 
-
-
-export default function CaptainsLog (overrides) {
-  let options = configure(overrides)
+module.exports = function CaptainsLog (overrides) {
+  // let options = configure(overrides)
   let logger = lowLevel()
 
-  if (options.custom) {
-    logger = options.custom
+  let callableLogger = wrap(logger)
 
-    if (!R.is(Object, logger) || !R.is(Function, logger.log)) {
-      throw new Error(
-        'Unsupported logger override provided as `custom`!\n' +
-        '(has no `.log()` or `.debug()` methid.)\n' +
-        'Passed: \n' + util.inspect(logger, {depth: null})
-      )
-    }
-  }
-
-  let nullLog = function () {}
-
-  logger.debug = logger.debug || nullLog
-  logger.info = logger.info || nullLog
+  return callableLogger
 }
