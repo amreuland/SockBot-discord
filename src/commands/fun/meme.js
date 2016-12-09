@@ -1,6 +1,7 @@
 'use strict'
 
-const { TextCommand } = require('lib/command/Command')
+const CommandGroup = require('lib/command/CommandGroup')
+const { TextCommand, HelpCommand } = require('lib/command/Command')
 const R = require('ramda')
 
 var memes = [
@@ -16,7 +17,7 @@ var memes = [
   ['unexpected', 'https://i.imgur.com/ZqwwF50.jpg'],
   ['barbaric', 'https://i.imgur.com/aOOKSA5.jpg'],
   ['breadcrumbs', 'https://i.imgur.com/zaCeu08.gif'],
-  ['fuckyou', 'https://i.imgur.com/xqlVQOC.jpg'],
+  ['fuckyou', 'https://i.imgur.com/Fgr8kcM.gifv'],
   ['allofthem', 'https://i.imgur.com/8nAo9qS.jpg'],
   ['casual', 'https://i.imgur.com/LUJJ8aK.jpg'],
   ['allyourshit', 'https://i.imgur.com/AF4BFcw.jpg'],
@@ -47,19 +48,46 @@ var memes = [
   ['yes', 'canada', 'https://i.imgur.com/NH0zEjj.gif'],
   ['thisisfine', 'https://i.imgur.com/HeUNm7E.gifv'],
   ['myjam', 'https://i.imgur.com/1AxGtP8.gifv'],
-  ['datboi', 'http://i1.kym-cdn.com/entries/icons/original/000/020/401/1461813522505.jpg']
+  ['datboi', 'http://i1.kym-cdn.com/entries/icons/original/000/020/401/1461813522505.jpg'],
+  ['ilied', 'https://i.imgur.com/gy7bgm3.gif'],
+  ['diabolicallaughter', 'dlaugh', 'https://i.imgur.com/yR0fJDD.gifv'],
+  ['runbitch', 'runb', 'run', 'https://i.imgur.com/gYACGP6.gifv'],
+  ['stealth', 'https://i.imgur.com/BbZHFS6.png'],
+  ['killurge', 'https://i.imgur.com/m1LWo6O.jpg'],
+  ['confusion', 'https://i.imgur.com/AEVtLHS.jpg'],
+  ['notime', 'https://i.imgur.com/xH5YIqF.png'],
+  ['crouch', 'https://i.imgur.com/sgS5hTa.gifv'],
+  ['yesbounce', 'https://i.imgur.com/BiF6FjQ.gifv'],
+  ['nope', 'https://i.imgur.com/7EuLTsX.gif'],
+  ['food', 'foodtime', 'hungry', 'https://i.imgur.com/b8gs8I7.gif'],
+  ['driving', 'https://i.imgur.com/5oZsI6f.gifv'],
+  ['lunchfuckit', 'https://i.redditmedia.com/tFe6u-XkSpUbDe9-QNKn5PlN9AK8G61KKMuRnrpUqnY.jpg?w=550&s=ff78fec5fb3faf1b3af4bf57cf0b04ec'],
+  ['game?', 'https://i.imgur.com/iIvGAua.jpg'],
+  ['mistake', 'https://i.imgur.com/2MU0SNK.jpg'],
+  ['talkingshit', 'shittalking', 'talkinshit', 'https://i.imgur.com/El90BZb.jpg'],
+  ['dowhatiwant', 'https://i.imgur.com/eGtpt2E.gif']
 ]
 
-var ex = []
-var id
-var aliases
-var text
+let id
+let aliases
+let text
+
+let commander = new CommandGroup({
+  id: 'memes',
+  aliases: ['meme'],
+  categories: ['fun', 'memes'],
+  parameters: ['<meme>'],
+  description: 'Funny and/or stupid images',
+  cooldown: 5
+})
+
+commander.registerCommand(new HelpCommand())
 
 R.forEach(meme => {
   aliases = R.init(meme)
   id = R.head(aliases)
   text = R.last(meme)
-  ex.push(new TextCommand({
+  commander.registerCommand(new TextCommand({
     id: id,
     aliases: aliases,
     text: text,
@@ -69,14 +97,13 @@ R.forEach(meme => {
 
 let allCommands = R.map(R.compose(x => '`' + x + '`', R.join('`, `'), R.init), memes)
 
-ex.push(new TextCommand({
-  id: 'listmemes',
-  aliases: ['listm'],
+commander.registerCommand(new TextCommand({
+  id: 'list',
+  aliases: ['listm', 'listmemes'],
   text: R.join('\n', allCommands),
   categories: ['memes']
 }))
 
-module.exports.commands = ex
-
-// imgur client id bb2ee1187b59f81
-// imgur client secret e78f79abe8089424859ea83d2df8f3ef88bb443f
+module.exports.commands = [
+  commander
+]

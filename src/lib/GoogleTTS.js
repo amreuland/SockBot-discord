@@ -67,13 +67,16 @@ class GoogleTTS {
     // Get the file signature
     const signature = md5(R.join('-', R.values(qs)))
     const cacheDir = path.join(this.cache, this.name, options.lang, signature.substr(0, 2))
-    const cacheFile = `${slugify(options.str).substring(0, 50)}_${signature}`
+    const cacheFile = `${slugify(options.str).substring(0, 50)}_${signature}.${this.format}`
     const cachePath = path.join(cacheDir, cacheFile)
 
     return ensureDirAsync(cacheDir)
     .then(res => existsAsync(cachePath))
     .catch(e => {
-      if (e.message === 'true') return true
+      if (e.message === 'true') {
+        return true
+      }
+      
       throw e
     })
     // .return(false)

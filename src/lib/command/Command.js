@@ -1,13 +1,17 @@
 'use strict'
 
 const Promise = require('bluebird')
+const Discordie = require('discordie')
 const R = require('ramda')
 const { Markdown: M } = require('lib/StringUtils')
 
 class CommandError extends Error {
   constructor (args) {
     args = args || ''
-    if (R.is(String, args)) args = { message: args }
+    if (R.is(String, args)) {
+      args = { message: args }
+    }
+
     super(args.message)
     this.cmdChain = (args.chain ? [args.chain] : [])
   }
@@ -50,78 +54,315 @@ class HelpTextError extends CommandError {
 }
 
 class Command {
-  constructor ({
-    id: optsId,
-    aliases: optsAliases = [],
-    parameters: optsParameters = [],
-    categories: optsCategories = [],
-    description: optsDescription = ''
-  }) {
-    this._id = optsId
-    this._aliases = optsAliases
-    this._parameters = optsParameters
-    this._categories = optsCategories
-    this._description = optsDescription
-
-    this._parent = null
-    this._parentList = []
-    this._finalized = false
-    this._id = R.toLower(this._id)
-
-    if (R.is(String, this._aliases)) {
-      this._aliases = [this._aliases]
+  constructor (id, options) {
+    if (R.is(Object, id)) {
+      options = id
+      id = options.id
+      // runner = options.runner
     }
 
-    this._aliases = R.map(R.toLower, this._aliases)
-    
-    if (!R.contains(this._id, this._aliases)) {
-      this._aliases.push(this._id)
+    this.id = id
+    this.description = options.desc || options.description || ''
+    this.usage = options.usage || ''
+    this.aliases = options.aliases || []
+    this.parameters = options.parameters || []
+    this.categories = options.categories || []
+
+    this.parent = null
+
+    if (R.is(String, this.aliases)) {
+      this.aliases = [this.aliases]
     }
 
-    if (R.is(String, this._parameters)) {
-      this._parameters = [this._parameters]
+    if (!R.contains(this.id, this.aliases)) {
+      this.aliases.push(this.id)
     }
+
+    if (R.is(String, this.parameters)) {
+      this.parameters = [this.parameters]
+    }
+
+    this.reqs = options.reqs || {}
+
+    if (!this.reqs.userIds) {
+      this.reqs.userIds = []
+    }
+
+    if (!this.reqs.permissions) {
+      this.reqs.permissions = []
+    }
+
+    if (!this.reqs.roleIds) {
+      this.reqs.roleIds = []
+    }
+
+    if (!this.reqs.roleNames) {
+      this.reqs.roleNames = []
+    }
+
+    this.deleteCommand = !!options.deleteCommand
+    this.dmOnly = !!options.dmOnly
+    this.guildOnly = !!options.guildOnly
+
+    this.cooldown = options.cooldown || 0
+    this.cooldownMessage = options.cooldownMessage || false
+    this.permissionMessage = options.permissionMessage || false
+
+    // if (this.cooldown !== 0) {
+    this.usersOnCooldown = new Set()
+    // }
+
+    // if (typeof runner === 'string') {
+    //   this.response = runner
+    //   this.execute = () => this.response
+    // } else if (R.isArray(runner)) {
+    //   // Do a thing
+    // } else if (typeof runner === 'function') {
+    //   this.execute = runner
+    // } else {
+    //   throw new Error('Invalid command generator')
+    // }
   }
 
-  run (handler, evt, args) {
+  permissionCheck (message) {
+    let req = false
+    if (this.reqs.userIds.length > 0) {
+      req = true
+      if (~this.reqs.userIds.indexOf(message.author.id)) {
+        return true
+      }
+    }
+
+    if (message.isPrivate === true) {
+      return !this.guildOnly && !req
+    } else if (this.dmOnly) {
+      return false
+    }
+
+    // let keys = R.keys(this.reqs.permissions)
+    if (this.reqs.permissions.length > 0) {
+      req = true
+      for (let perm of this.reqs.permissions) {
+        if (!message.author.can(perm, message.channel)) {
+          req = false
+          break
+        }
+      }
+
+      if (req) {
+        return true
+      }
+
+      req = true
+    }
+
+    if (message.member && message.member.roles.length > 0) {
+      let roles = message.member.roles
+
+      if (this.reqs.roleIds.length > 0) {
+        req = true
+        for (let roleId of this.reqs.roleIds) {
+          if (~roles.indexOf(roleId)) {
+            return true
+          }
+        }
+      }
+
+      // if (this.reqs.roleNames.length > 0) {
+      //   req = true
+      //   roles = R.map(roleId => message.guild.)
+      // }
+    }
+
+    return !req
+  }
+
+  cooldownCheck (userId) {
+    if (this.cooldown === 0) {
+      return true
+    }
+
+    if (this.usersOnCooldown.has(userId)) {
+      return false
+    }
+
+    this.usersOnCooldown.add(userId)
+    setTimeout(() => this.usersOnCooldown.delete(userId), this.cooldown)
+    return true
+  }
+
+  process (handler, message, args) {
+    if (this.deleteCommand &&
+      !message.isPrivate &&
+      handler.client.User.can(Discordie.Permissions.Text.MANAGE_MESSAGES, message.channel)) {
+      message.delete()
+    }
+
+    if (!this.permissionCheck(message)) {
+      if (this.permissionMessage) {
+        return Promise.resolve(message.author.mention + ' ' + this.permissionMessage)
+      }
+      return Promise.resolve()
+    }
+
+    if (this.cooldown !== 0 && !this.cooldownCheck(message.author.id)) {
+      if (this.cooldownMessage) {
+        return Promise.resolve(message.author.mention + ' ' + this.cooldownMessage)
+      }
+      return Promise.resolve()
+    }
+
+    return this.execute(handler, message, args)
+  }
+
+  execute (handler, message, args) {
     return Promise.reject(new Error('Abstract Command class cannot be used'))
   }
 
-  getId () { return this._id }
-  getAliases () { return this._aliases }
-  getParameters () { return this._parameters }
-  getCategories () { return this._categories }
-  getDescription () { return this._description }
-
-  getParent () { return this._parent }
-
-  setParent (parent) {
-    if (this._finalized) throw new CommandStateError('Cannot set parent on finalized command')
-    this._parent = parent
+  /**
+   * Returns the id of this command
+   * Each command id must be unique in its command group
+   * @instance
+   * @return {String} The commands ID
+   */
+  getId () {
+    return this.id
   }
 
+  /**
+   * Returns the aliases of this command
+   * @return {String[]} list of command aliases
+   */
+  getAliases () {
+    return this.aliases
+  }
+
+  /**
+   * Returns the parameters for this command
+   * @return {String[]} list of parameters in order
+   */
+  getParameters () {
+    return this.parameters
+  }
+
+  /**
+   * Returns the categories this command falls under
+   * @return {String[]} command categories
+   */
+  getCategories () {
+    return this.categories
+  }
+
+  /**
+   * Returns the description for this command
+   * @return {String} command description
+   */
+  getDescription () {
+    return this.description
+  }
+
+  /**
+   * Returns the parent command group for this command
+   * @return {Command} command parent
+   */
+  getParent () {
+    return this.parent
+  }
+
+  getCooldown () {
+    return this.cooldown
+  }
+
+  setCooldown (sec) {
+    this.finalizeCheck()
+    this.cooldown = sec
+  }
+
+  setGuildOnly (guildOnly) {
+    this.finalizeCheck()
+
+    this.guildOnly = guildOnly
+  }
+
+  finalizeCheck () {
+    if (this.finalized) {
+      throw new CommandStateError('Cannot change finalized command')
+    }
+  }
+
+  /**
+   * Sets the parent command group for this command
+   * Should not be called unless you need to add to a command group after
+   * it has been finalized
+   * @param {CommandGroup} parent Parent command group
+   */
+  setParent (parent) {
+    this.finalizeCheck()
+
+    this.parent = parent
+  }
+
+  /**
+   * Retruns a string representing the path taken to get to this command
+   * @example
+   * 'commandGroup1 commandGroup2 targetCommand'
+   * @return {String} command path
+   */
   getParentPath () {
-    let l = [this.getId()]
+    let l = []
     let p = this
 
-    while (p.getParent() !== null) {
-      p = p.getParent()
-      if (p.getId() !== 'null') l.unshift(p.getId())
+    while (p.parent !== null) {
+      p = p.parent
+      if (p.id !== null && p.id !== undefined) {
+        l.unshift(p.id)
+      }
     }
 
-    return R.join(' ', l)
+    return l
   }
 
-  getRootParent () { return this._parent === null ? this : this._parent.getRootParent() }
 
-  // getHelp(args){ return this._description; }
+  getCommandPath () {
+    let l = this.getParentPath()
+    l.push(this.id)
+    return l
+  }
 
+  /**
+   * Returns the top most command group.
+   * Should be the event handler group
+   * @return {Command} root parent commandgroup
+   */
+  getRootParent () {
+    return this.parent === null ? this : this.parent.getRootParent()
+  }
+
+  // getHelp(args){ return this.description; }
+
+  /**
+   * Finalize the command so no other changes can be made
+   */
   finalize () {
-    if (this._finalized) throw new CommandStateError('Command already finalized')
-    this._finalized = true
+    if (this.finalized) {
+      throw new CommandStateError('Command already finalized')
+    }
+
+    this.finalized = true
+
+    let args = this.getParameters()
+    if (args.length > 0) {
+      args = R.compose(R.join(' '), R.map(M.inline))(args)
+    }
+    this.helpString = `${M.inline(this.getId())} ${args} `
   }
 }
 
+/**
+ * Creates a new CategoryCommand extending {[Command]}
+ * @class CategoryCommand
+ * @classdesc Command for each category
+ */
 class CategoryCommand extends Command {
   constructor () {
     super({
@@ -132,7 +373,7 @@ class CategoryCommand extends Command {
     })
   }
 
-  run (handler, evt, args) {
+  execute (handler, evt, args) {
     let parent = this.getParent()
     return Promise.resolve(M.code(parent.getCommands()))
   }
@@ -142,30 +383,45 @@ class HelpCommand extends Command {
   constructor () {
     super({
       id: 'help',
-      parameters: ['(category)'],
+      parameters: ['(command)'],
       categories: ['util', 'help'],
-      description: 'List commands by category'
+      description: 'Get a list of commands'
     })
   }
 
-  run (handler, evt, args) {
+  execute (handler, message, args) {
+    let pageNum = 1
     if (!isNaN(args[0])) {
-      let pageNum = parseInt(args[0])
-      return Promise.resolve(pageNum)
+      pageNum = parseInt(args.shift())
     }
 
-    return Promise.resolve('a')
+    let commands = this.getParent().getCommands()
+
+    let listings = []
+    let line
+
+    console.log(this.getParentPath())
+
+    R.forEach(command => {
+      line = handler.chatPrefix + R.join(' ', command.getCommandPath())
+      if (command.description !== '') {
+        line = line + ' - ' + command.description
+      }
+      listings.push(line)
+    }, R.values(commands))
+
+    return Promise.resolve(R.join('\n', listings))
   }
 }
 
 class TextCommand extends Command {
   constructor (args) {
     super(args)
-    this._return = args.text
+    this.response = args.text
   }
 
-  run (handler, evt, args) {
-    return Promise.resolve(this._return)
+  execute (handler, evt, args) {
+    return Promise.resolve(this.response)
   }
 }
 
@@ -175,7 +431,7 @@ class SimpleCommand extends Command {
     this._run = args.run
   }
 
-  run (handler, evt, args) {
+  execute (handler, evt, args) {
     return this._run(handler, evt, args)
   }
 }

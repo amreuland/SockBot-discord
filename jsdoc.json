@@ -1,0 +1,20 @@
+{
+  "source": {
+    "exclude": [
+      "node_modules",
+      "config"
+    ],
+    "include": [
+      "src"
+    ]
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc", "closure"]
+  },
+  "plugins": [],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false
+  }
+}

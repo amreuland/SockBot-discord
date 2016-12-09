@@ -21,10 +21,11 @@ class ChatHandler extends ChannelEventHandler {
   constructor () {
     super()
 
+    this.chatPrefix = conf.chat_prefix
     this.commands = {}
     this.prefixes = []
     this.aliases = {}
-    this.handler = new CommandGroup({id: 'null'})
+    this.handler = new CommandGroup({name: null})
 
     this.handler.registerCommand(new CategoryCommand())
     this.handler.registerCommand(new HelpCommand())
@@ -58,7 +59,7 @@ class ChatHandler extends ChannelEventHandler {
 
   _processReturn (evt, obj) {
     if (R.is(String, obj) || R.is(Number, obj)) {
-      //evt.message.channel.sendTyping()
+      // evt.message.channel.sendTyping()
       evt.message.channel.sendMessage(obj)
       return
     }
@@ -75,14 +76,19 @@ class ChatHandler extends ChannelEventHandler {
   }
 
   _handleChat (evt) {
-    if (!evt.message) return
-    if (this.client.User.id === evt.message.author.id) return
+    if (!evt.message) {
+      return
+    }
+
+    if (this.client.User.id === evt.message.author.id) {
+      return
+    }
 
     // if(!admins[evt.message.author.id]) return;
     let content
-    console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}] ${evt.message.author.username}: ${evt.message.content}`)
-    if (evt.message.content.indexOf(chatPrefix) === 0) {
-      content = evt.message.content.substring(chatPrefix.length)
+    // console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}] ${evt.message.author.username}: ${evt.message.content}`)
+    if (evt.message.content.indexOf(this.chatPrefix) === 0) {
+      content = evt.message.content.substring(this.chatPrefix.length)
     // }else if (this.client.User.isMentioned(evt.message)) {
     //   // if(evt.message.content.split(/\s+/)[1])
     //   return;
@@ -92,7 +98,7 @@ class ChatHandler extends ChannelEventHandler {
 
     let args = splitter(content)
 
-    let ret = this.handler.run(this, evt, args)
+    let ret = this.handler.process(this, evt.message, args)
 
     if (ret instanceof Promise) {
       ret.then(res => {
@@ -113,14 +119,17 @@ class ChatHandler extends ChannelEventHandler {
         let errs = R.join('\n', R.map(r => `\t ${r}`, err.errs))
 
         evt.message.channel.sendMessage(`Usage:  ${
-          M.inline(chatPrefix)
+          M.inline(this.chatPrefix)
         }${M.boldInline(stack)}  ${params}\n${errs}`)
 
         return err
       })
       .catch(err => {
         sentry.captureError(err)
-        if (err instanceof Error) return evt.message.channel.sendMessage(M.code(err.stack))
+        if (err instanceof Error) {
+          return evt.message.channel.sendMessage(M.code(err.stack))
+        }
+
         evt.message.channel.sendMessage(M.code(err))
         // return
       })

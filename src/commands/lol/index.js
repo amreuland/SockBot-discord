@@ -1,24 +1,14 @@
 'use strict'
 
-// const Promise = require('bluebird');
-// const conf = require('config');
-// const R = require('ramda');
-// const CommandGroup = require('lib/command/CommandGroup');
-// const CommandGroup = require('lib/command/CommandGroup');
-
-// const Promise = require('bluebird')
-// const conf = require('config')
-// const R = require('ramda')
-
-const { SimpleCommand, HelpCommand } = require('lib/command/Command')
 const CommandGroup = require('lib/command/CommandGroup')
 
-// const { Markdown: M } = require('lib/StringUtils')
+const { HelpCommand } = require('lib/command/Command')
 
-const { matchDetails } = require('./riot')
-// import
+const { LoLMatchLookupCommand } = require('./riot')
 
-// function lolUsage()
+let lookupCommand = new LoLMatchLookupCommand('match')
+lookupCommand.setGuildOnly(true)
+// lookupCommand.setTimeout()
 
 var commander = new CommandGroup({
   id: 'league',
@@ -28,12 +18,8 @@ var commander = new CommandGroup({
   description: 'Commands that help with League of Legends'
 })
 
-commander.registerCommand(new SimpleCommand({
-  id: 'match',
-  run: matchDetails,
-  parameters: ['<region>', '<summoner>'],
-  description: 'Get the current match for a summoner'
-}))
+commander.registerCommand(new HelpCommand())
+commander.registerCommand(lookupCommand)
 
 module.exports.commands = [
   commander

@@ -1,10 +1,10 @@
 'use strict'
 
-//const gitRevSync = require('git-rev-sync')
+// const gitRevSync = require('git-rev-sync')
 const conf = require('config')
 const raven = require('raven')
 
-//const gitRevisionId = gitRevSync.long()
+// const gitRevisionId = gitRevSync.long()
 
 var client
 

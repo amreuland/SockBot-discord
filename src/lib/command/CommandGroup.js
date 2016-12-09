@@ -8,46 +8,58 @@ const { Command, UnknownCommandError, UsageError } = require('lib/command/Comman
 
 const MAX_HELP_PER_PAGE = 8
 
-const getId = obj => M.inline(obj._id)
-const getParameters = obj => (obj._parameters.length >= 1 ? ' ' + M.inline(R.join(' ', obj._parameters)) : '')
-const getDescription = obj => (obj._description.length >= 1 ? `\n\t${obj._description}` : '')
+const getId = obj => M.inline(obj.id)
+const getParameters = obj => (obj.parameters.length >= 1 ? ' ' + M.inline(R.join(' ', obj.parameters)) : '')
+const getDescription = obj => (obj.description.length >= 1 ? `\n\t${obj.description}` : '')
 
 // const makeUsageString = obj => M.
 
 const getPartitions = R.juxt([getId, getParameters, getDescription])
 const createString = R.compose(R.join(''), getPartitions)
 
-const selectFields = R.project(['_id', '_parameters', '_description', '_helpText'])
+const selectFields = R.project(['id', 'parameters', 'description', 'helpText'])
 const getData = R.compose(selectFields, R.values)
 
-const sortById = R.sortBy(R.prop('_id'))
+const sortById = R.sortBy(R.prop('id'))
 
 const getHelpObj = R.map(createString)
 
 class CommandGroup extends Command {
-  constructor (opts) {
-    opts.parameters = opts.parameters || ['<sub command>', '[sub args]']
-    opts.description = opts.description || 'A command group'
 
-    super(opts)
-    this._commands = {}
-    this._cmdAliasMap = {}
-    this._helpMap = {}
+  /**
+   * Creates a new CommandGroup
+   *
+   * @param  {Object} options command options
+   * @param  {String} options.id:          the id for this
+   * @param  {String[]}  options.aliases:     the aliases for this command
+   * @param  {String[]}  options.parameters:  the parameters requirements
+   * @param  {String[]}  options.categories:  a list of categories this command falls under
+   * @param  {String} options.description: A description of this command
+   * @extends {Command}
+   */
+  constructor (options) {
+    options.parameters = options.parameters || ['<sub command>', '[sub args]']
+    options.description = options.description || 'A command group'
+
+    super(options)
+    this.commands = {}
+    this.cmdAliasMap = {}
+    this.helpMap = {}
 
 //    this.registerCommand()
   }
 
-  run (handler, evt, args) {
+  execute (handler, evt, args) {
     let alias = args.shift()
     if (!alias) return
 
     alias = R.toLower(alias)
 
-    let cmd = this._cmdAliasMap[alias]
+    let cmd = this.cmdAliasMap[alias]
     if (!cmd) return Promise.reject(new UnknownCommandError(alias))
 
-    let command = this._commands[cmd]
-    let ret = command.run(handler, evt, args)
+    let command = this.commands[cmd]
+    let ret = command.process(handler, evt, args)
 
     if (ret instanceof Promise) {
       return ret.catch(UnknownCommandError, e => {
@@ -56,7 +68,7 @@ class CommandGroup extends Command {
       })
       .catch(UsageError, e => {
         e.addParent(alias)
-        e.setParams(command._parameters)
+        e.setParams(command.parameters)
         throw e
       })
     } else {
@@ -64,40 +76,70 @@ class CommandGroup extends Command {
     }
   }
 
+  /**
+   * Add a new command to this command group
+   *
+   * @param  {Command} cmd command to add
+   */
   registerCommand (cmd) {
-    if (this._finalized) throw new Error('Attempted to add command to finalized CommandGroup')
+    if (this.finalized) {
+      throw new Error('Attempted to add command to finalized CommandGroup')
+    }
 
-    if (!R.is(Command, cmd)) throw new TypeError('argument is not a command!')
+    if (!R.is(Command, cmd)) {
+      throw new TypeError('argument is not a command!')
+    }
 
-    let id = cmd._id
+    let id = cmd.id
 
-    if (R.contains(id, this._commands)) throw new Error(`Command with id '${id}' already exists.`)
+    if (R.contains(id, this.commands)) {
+      throw new Error(`Command with id '${id}' already exists.`)
+    }
 
     cmd.setParent(this)
-    this._commands[id] = cmd
+    this.commands[id] = cmd
 
     R.forEach(alias => {
-      if (R.contains(alias, this._cmdAliasMap)) {
-        throw new Error(`Alias '${alias}'already exists (${this._cmdAliasMap[alias]}).`)
+      if (R.contains(alias, this.cmdAliasMap)) {
+        throw new Error(`Alias '${alias}'already exists (${this.cmdAliasMap[alias]}).`)
       }
-      this._cmdAliasMap[alias] = id
-    }, cmd._aliases)
+      this.cmdAliasMap[alias] = id
+    }, cmd.aliases)
   }
 
+  /**
+   * Remove a command from this command group
+   *
+   * @param  {String} id the id of the command to remove
+   */
   unregisterCommand (id) {
     id = R.toLower(id)
-    let aliases = this._commands[id].aliases
-    R.forEach(alias => delete this._cmdAliasMap[alias], aliases)
+    let aliases = this.commands[id].aliases
+    R.forEach(alias => delete this.cmdAliasMap[alias], aliases)
 
-    delete this._commands[id]
+    delete this.commands[id]
   }
 
+  /**
+   * Finalize the command group so that no changes may be made
+   * This means no new commands may be added
+   *
+   */
   finalize () {
     super.finalize()
-    for (let cmd of R.values(this._commands)) cmd.finalize()
+    for (let cmd of R.values(this.commands)) {
+      cmd.finalize()
+    }
   }
 
-  getCommands () { return this._commands }
+  /**
+   * Returns the commands this commandgroup is parent to
+   *
+   * @return {Command[]} A lits of commands
+   */
+  getCommands () {
+    return this.commands
+  }
 
 }
 
