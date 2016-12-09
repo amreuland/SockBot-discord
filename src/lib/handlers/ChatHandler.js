@@ -1,25 +1,22 @@
 'use strict'
 
-const Discord = require('discordie')
+const Discordie = require('discordie')
 const R = require('ramda')
 const Promise = require('bluebird')
-const moment = require('moment')
 const conf = require('config')
 
 const { Markdown: M, SplitString: splitter } = require('lib/StringUtils')
 const CommandGroup = require('lib/command/CommandGroup')
 const { CategoryCommand, HelpCommand, UnknownCommandError, UsageError } = require('lib/command/Command')
+
 const ChannelEventHandler = require('lib/handlers/ChannelEventHandler')
 
 const sentry = require('sentry')
 
-// const admins = conf.admins
-const chatPrefix = conf.chat_prefix
-
 class ChatHandler extends ChannelEventHandler {
 
-  constructor () {
-    super()
+  constructor (bot) {
+    super(bot)
 
     this.chatPrefix = conf.chat_prefix
     this.commands = {}
@@ -29,14 +26,16 @@ class ChatHandler extends ChannelEventHandler {
 
     this.handler.registerCommand(new CategoryCommand())
     this.handler.registerCommand(new HelpCommand())
+
+    this.registerHandler()
   }
 
-  registerHandler (client) {
-    super.registerHandler(client)
+  registerHandler () {
+    // super.registerHandler(client)
     // console.log(this);
     // let self = this;
     // this.cmdHandler = e => this._handleChat(e);
-    this.client.Dispatcher.on(Discord.Events.MESSAGE_CREATE, e => this._handleChat(e))
+    this.getClient().Dispatcher.on(Discordie.Events.MESSAGE_CREATE, e => this._handleChat(e))
   }
 
   destroy () {
@@ -80,16 +79,17 @@ class ChatHandler extends ChannelEventHandler {
       return
     }
 
-    if (this.client.User.id === evt.message.author.id) {
+    if (this.getClient().User.id === evt.message.author.id) {
       return
     }
 
     // if(!admins[evt.message.author.id]) return;
     let content
     // console.log(`[${moment().format('YYYY-MM-DD HH:mm:ss')}] ${evt.message.author.username}: ${evt.message.content}`)
+    this.getLogger().info(evt.message.author.username, ':', evt.message.content)
     if (evt.message.content.indexOf(this.chatPrefix) === 0) {
       content = evt.message.content.substring(this.chatPrefix.length)
-    // }else if (this.client.User.isMentioned(evt.message)) {
+    // }else if (this.getClient().User.isMentioned(evt.message)) {
     //   // if(evt.message.content.split(/\s+/)[1])
     //   return;
     } else {

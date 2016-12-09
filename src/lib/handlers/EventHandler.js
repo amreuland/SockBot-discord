@@ -1,16 +1,24 @@
 'use strict'
 
 class EventHandler {
-  // constructor (client) {
-  //   this.client = client
+  constructor (bot) {
+    this.bot = bot
+  }
+
+  // registerHandler (bot) {
+  //   this.bot = bot
   // }
 
-  registerHandler (client) {
-    this.client = client
+  getBot () {
+    return this.bot
+  }
+
+  getLogger () {
+    return this.bot.logger
   }
 
   getClient () {
-    return this.client
+    return this.bot.client
   }
 }
 

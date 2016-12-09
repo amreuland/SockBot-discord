@@ -9,6 +9,7 @@ module.exports = {
   LOGLEVELS: {
     silly: 0,
     verbose: 1,
+    log: 2,
     info: 2,
     blank: 2,
     debug: 3,
@@ -21,6 +22,7 @@ module.exports = {
   PREFIXES: {
     silly: 'Silly',
     verbose: 'Verbose',
+    log: 'Info',
     info: 'Info',
     debug: 'Debug',
     warn: 'Warn',
@@ -33,6 +35,7 @@ module.exports = {
     input: 'black',
     verbose: 'cyan',
     prompt: 'grey',
+    log: 'green',
     info: 'green',
     blank: 'white',
     data: 'grey',
@@ -49,6 +52,7 @@ module.exports = {
     'warn',
     'debug',
     'info',
+    'log',
     'blank',
     'verbose',
     'silly'

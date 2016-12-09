@@ -194,7 +194,7 @@ class Command {
   process (handler, message, args) {
     if (this.deleteCommand &&
       !message.isPrivate &&
-      handler.client.User.can(Discordie.Permissions.Text.MANAGE_MESSAGES, message.channel)) {
+      handler.getClient().User.can(Discordie.Permissions.Text.MANAGE_MESSAGES, message.channel)) {
       message.delete()
     }
 
@@ -322,7 +322,6 @@ class Command {
     return l
   }
 
-
   getCommandPath () {
     let l = this.getParentPath()
     l.push(this.id)
@@ -399,8 +398,6 @@ class HelpCommand extends Command {
 
     let listings = []
     let line
-
-    console.log(this.getParentPath())
 
     R.forEach(command => {
       line = handler.chatPrefix + R.join(' ', command.getCommandPath())
