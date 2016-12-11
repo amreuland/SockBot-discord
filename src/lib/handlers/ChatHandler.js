@@ -3,7 +3,6 @@
 const Discordie = require('discordie')
 const R = require('ramda')
 const Promise = require('bluebird')
-const conf = require('config')
 
 const { Markdown: M, SplitString: splitter } = require('lib/StringUtils')
 const CommandGroup = require('lib/command/CommandGroup')
@@ -11,20 +10,18 @@ const { CategoryCommand, HelpCommand, UnknownCommandError, UsageError } = requir
 
 const ChannelEventHandler = require('lib/handlers/ChannelEventHandler')
 
-const sentry = require('sentry')
-
 class ChatHandler extends ChannelEventHandler {
 
   constructor (bot) {
     super(bot)
 
-    this.chatPrefix = conf.chat_prefix
+    this.chatPrefix = this.bot.config.chat_prefix
     this.commands = {}
     this.prefixes = []
     this.aliases = {}
     this.handler = new CommandGroup({name: null})
 
-    this.handler.registerCommand(new CategoryCommand())
+    // this.handler.registerCommand(new CategoryCommand())
     this.handler.registerCommand(new HelpCommand())
 
     this.registerHandler()
@@ -35,7 +32,7 @@ class ChatHandler extends ChannelEventHandler {
     // console.log(this);
     // let self = this;
     // this.cmdHandler = e => this._handleChat(e);
-    this.getClient().Dispatcher.on(Discordie.Events.MESSAGE_CREATE, e => this._handleChat(e))
+    this.getClient().Dispatcher.on(Discordie.Events.MESSAGE_CREATE, evt => this._handleChat(evt))
   }
 
   destroy () {
@@ -125,7 +122,7 @@ class ChatHandler extends ChannelEventHandler {
         return err
       })
       .catch(err => {
-        sentry.captureError(err)
+        this.bot.sentry.captureError(err)
         if (err instanceof Error) {
           return evt.message.channel.sendMessage(M.code(err.stack))
         }

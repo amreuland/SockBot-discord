@@ -14,7 +14,7 @@ class EventHandler {
   }
 
   getLogger () {
-    return this.bot.logger
+    return this.bot.log
   }
 
   getClient () {

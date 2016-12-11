@@ -2,4 +2,7 @@
 
 const Bot = require('./bot')
 
-let SockBot = new Bot()
+let config = require('config')
+
+let SockBot = new Bot(config)
+
